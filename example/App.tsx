@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
-import { Tunnel3D } from '../src';
+import { Tunnel3D, TunnelControls } from '../src';
 
 const stats = new Stats();
 document.body.appendChild(stats.dom);
@@ -22,7 +22,15 @@ const scene = new THREE.Scene();
 const group = new THREE.Group();
 scene.add(group);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const { innerWidth: width, innerHeight: height } = window;
+const camera = new THREE.OrthographicCamera(
+    width / -2,
+    width / 2,
+    height / 2,
+    height / -2,
+    1,
+    1_000,
+);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -35,13 +43,18 @@ const cameraControls = new CameraControls(camera, renderer.domElement);
 const tunnel = new Tunnel3D();
 group.add(tunnel);
 
-const size = 10;
-const divisions = 10;
+const tunnelControls = new TunnelControls();
+tunnelControls.attach(tunnel);
+const grout = tunnelControls.addGrout();
+
+const size = 200;
+const divisions = 200;
 
 const gridHelper = new THREE.GridHelper(size, divisions);
+
 scene.add(gridHelper);
 
-cameraControls.setPosition(-10, 10, 10);
+cameraControls.setPosition(-100, 100, 100);
 
 const axesHelper = new THREE.AxesHelper(5);
 scene.add(axesHelper);
@@ -70,33 +83,57 @@ tunnelFolder
     .add(tunnel, 'tunnelLength', 1, 100)
     .name('Length [L]')
     .onChange((value) => {
-        tunnel.tunnelLength = value;
-        tunnel.update();
+        tunnelControls.setTunnelParams({ tunnelLength: value });
     })
     .disable();
 
 tunnelFolder
     .add(tunnel, 'tunnelWidth', 1, 100)
-    .name('Width [W]')
+    .name('Width [W] (m)')
     .onChange((value) => {
-        tunnel.tunnelWidth = value;
-        tunnel.update();
+        tunnelControls.setTunnelParams({ tunnelWidth: value });
     });
 
 tunnelFolder
     .add(tunnel, 'tunnelHeight', 1, 20)
-    .name('Height [H]')
+    .name('Height [H] (m)')
     .onChange((value) => {
-        tunnel.tunnelHeight = value;
-        tunnel.update();
+        tunnelControls.setTunnelParams({ tunnelHeight: value });
     });
 
 tunnelFolder
     .add(tunnel, 'tunnelRoofHeight', 1, 10)
-    .name('Roof [f]')
+    .name('Roof [f] (m)')
     .onChange((value) => {
-        tunnel.tunnelRoofHeight = value;
-        tunnel.update();
+        tunnelControls.setTunnelParams({ tunnelRoofHeight: value });
+    });
+
+const groutFolder = gui.addFolder('Grout');
+const groutParams = {
+    visible: true,
+    angle: 5,
+    holeLength: 10,
+};
+
+groutFolder
+    .add(groutParams, 'visible')
+    .name('Visible')
+    .onChange((value) => {
+        if (grout == null) return;
+        grout.visible = value;
+    });
+groutFolder
+    .add(groutParams, 'angle', 1, 20, 1)
+    .name('Angle [α] (degrees)')
+    .onChange((value) => {
+        tunnelControls.setGroutParams({ angle: value * THREE.MathUtils.DEG2RAD });
+    });
+
+groutFolder
+    .add(groutParams, 'holeLength', 1, 90)
+    .name('Hole Length [L] (m)')
+    .onChange((value) => {
+        tunnelControls.setGroutParams({ holeLength: value });
     });
 
 const params = {
@@ -111,6 +148,7 @@ const params = {
         cameraControls.fitToBox(tunnel, true, { paddingTop: 1, paddingBottom: 1 });
     },
 };
+
 const cameraFolder = gui.addFolder('Camera');
 cameraFolder.add(params, 'fit').name('Zoom to Tunnel');
 cameraFolder.add(params, 'fitProfile').name('Profile');
