@@ -9,8 +9,13 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
     public tunnelHeight: number = 10;
     public tunnelRoofHeight: number = 3;
 
+    public groutGroup: THREE.Group;
+
     constructor(params?: Partial<AbstractTunnel3DParams>) {
         super();
+
+        this.groutGroup = new THREE.Group();
+
         if (params) Object.assign(this, params);
         this._build();
     }
@@ -65,6 +70,8 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
         group.translateY(tunnelHeight / 2);
         this.add(group);
+
+        this.add(this.groutGroup);
     }
 
     update(): void {
