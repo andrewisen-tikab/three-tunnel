@@ -237,8 +237,8 @@ export default class Viewer {
 
         const viewpointsFolder = this._gui.addFolder('Viewpoints');
 
-        viewpointsFolder.add(params, 'fitProfile').name('Profile');
-        viewpointsFolder.add(params, 'fitCrossSection').name('Cross Section');
+        viewpointsFolder.add(params, 'fitProfile').name('Profile (side)');
+        viewpointsFolder.add(params, 'fitCrossSection').name('Cross Section (front)');
 
         const appearanceFolder = this._gui.addFolder('Appearance').close();
         appearanceFolder
