@@ -214,35 +214,7 @@ export default class Viewer {
             gridHelperXYVisible: false,
             gridHelperYZVisible: false,
             save: this._save.bind(this),
-            load: () => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'application/json';
-                input.onchange = (event: Event) => {
-                    const target = event.target as HTMLInputElement;
-                    const file = target.files?.[0];
-                    if (file == null) return;
-
-                    // check file name ends with .json
-                    if (!file.name.toLowerCase().endsWith('.json')) {
-                        alert('Invalid file type.');
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        try {
-                            const data = reader.result as string;
-                            const json = JSON.parse(data);
-                            this.fromJSON(json);
-                        } catch (error) {
-                            console.error(error);
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-                input.click();
-            },
+            load: this._load.bind(this),
         };
 
         const cameraFolder = this._gui.addFolder('Camera');
@@ -299,11 +271,41 @@ export default class Viewer {
         this.tunnelControls.setTunnelParams({ tunnelHeight, tunnelRoofHeight, tunnelWidth });
     }
 
-    private _save() {
+    private _save(): void {
         const data: string = JSON.stringify(this.toJSON(), null, 2);
         const blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
 
         const timestamp = new Date().toISOString().replace(/:/g, '-');
         saveAs(blob, `tunnel-data-${timestamp}.json`);
+    }
+
+    private _load(): void {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json';
+        input.onchange = (event: Event) => {
+            const target = event.target as HTMLInputElement;
+            const file = target.files?.[0];
+            if (file == null) return;
+
+            // check file name ends with .json
+            if (!file.name.toLowerCase().endsWith('.json')) {
+                alert('Invalid file type.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const data = reader.result as string;
+                    const json = JSON.parse(data);
+                    this.fromJSON(json);
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
     }
 }
