@@ -9,6 +9,8 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
     public tunnelHeight: number = 10;
     public tunnelRoofHeight: number = 3;
 
+    public tunnelColorHEX: number = 0x808080;
+
     public groutGroup: THREE.Group;
 
     constructor(params?: Partial<AbstractTunnel3DParams>) {
@@ -23,7 +25,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
     private _build() {
         const tunnelShape = new THREE.Shape();
 
-        const { tunnelWidth, tunnelHeight, tunnelLength, tunnelRoofHeight } = this;
+        const { tunnelWidth, tunnelHeight, tunnelLength, tunnelRoofHeight, tunnelColorHEX } = this;
 
         // Define the semi-major and semi-minor axes of the elliptical roof
         const semiMajorAxis = tunnelWidth / 2;
@@ -55,7 +57,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         const tunnelGeometry = new THREE.ExtrudeGeometry(tunnelShape, extrudeSettings);
         const tunnelMaterial = new THREE.MeshBasicMaterial({
             // grey
-            color: 0x808080,
+            color: tunnelColorHEX,
         });
         const tunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
 

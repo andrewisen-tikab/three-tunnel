@@ -9,12 +9,19 @@ export type AbstractTunnel3D = {
     tunnelHeight: number;
     tunnelRoofHeight: number;
 
+    /**
+     * Color as hexadecimal.
+     *
+     * E.g. 0xff0000 for red.
+     */
+    tunnelColorHEX: number;
+
     update(): void;
 };
 
 export type AbstractTunnel3DParams = Pick<
     AbstractTunnel3D,
-    'tunnelLength' | 'tunnelWidth' | 'tunnelHeight' | 'tunnelRoofHeight'
+    'tunnelLength' | 'tunnelWidth' | 'tunnelHeight' | 'tunnelRoofHeight' | 'tunnelColorHEX'
 >;
 
 export type AbstractGrout3D = {

@@ -14,7 +14,7 @@ CameraControls.install({ THREE });
 
 export type JSONParams = Pick<
     AbstractTunnel3D,
-    'tunnelHeight' | 'tunnelRoofHeight' | 'tunnelWidth'
+    'tunnelHeight' | 'tunnelRoofHeight' | 'tunnelWidth' | 'tunnelColorHEX'
 >;
 
 export default class Viewer {
@@ -142,6 +142,7 @@ export default class Viewer {
             .onChange((value: number) => {
                 this.tunnelControls.setTunnelParams({ tunnelLength: value });
             })
+            .listen()
             .disable();
 
         tunnelFolder
@@ -149,21 +150,32 @@ export default class Viewer {
             .name('Width [W] (m)')
             .onChange((value: number) => {
                 this.tunnelControls.setTunnelParams({ tunnelWidth: value });
-            });
+            })
+            .listen();
 
         tunnelFolder
             .add(this._tunnel, 'tunnelHeight', 1, 20)
             .name('Height [H] (m)')
             .onChange((value: number) => {
                 this.tunnelControls.setTunnelParams({ tunnelHeight: value });
-            });
+            })
+            .listen();
 
         tunnelFolder
             .add(this._tunnel, 'tunnelRoofHeight', 1, 10)
             .name('Roof [f] (m)')
             .onChange((value: number) => {
                 this.tunnelControls.setTunnelParams({ tunnelRoofHeight: value });
-            });
+            })
+            .listen();
+
+        tunnelFolder
+            .addColor(this._tunnel, 'tunnelColorHEX')
+            .name('Color')
+            .onChange((value: number) => {
+                this.tunnelControls.setTunnelParams({ tunnelColorHEX: value });
+            })
+            .listen();
 
         const groutFolder = this._gui.addFolder('Grout');
         const groutParams = {
@@ -255,20 +267,26 @@ export default class Viewer {
     }
 
     public toJSON(): JSONParams {
-        const { tunnelHeight, tunnelRoofHeight, tunnelWidth } = this._tunnel;
+        const { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX } = this._tunnel;
 
         const object: JSONParams = {
             tunnelHeight,
             tunnelRoofHeight,
             tunnelWidth,
+            tunnelColorHEX,
         };
 
         return object;
     }
 
     public fromJSON(json: JSONParams): void {
-        const { tunnelHeight, tunnelRoofHeight, tunnelWidth } = json;
-        this.tunnelControls.setTunnelParams({ tunnelHeight, tunnelRoofHeight, tunnelWidth });
+        const { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX } = json;
+        this.tunnelControls.setTunnelParams({
+            tunnelHeight,
+            tunnelRoofHeight,
+            tunnelWidth,
+            tunnelColorHEX,
+        });
     }
 
     private _save(): void {
