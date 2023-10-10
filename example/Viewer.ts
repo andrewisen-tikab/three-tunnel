@@ -80,11 +80,13 @@ export default class Viewer {
             1_000,
         );
 
-        this._renderer = new THREE.WebGLRenderer();
+        this._renderer = new THREE.WebGLRenderer({
+            preserveDrawingBuffer: true,
+        });
         this._renderer.setSize(window.innerWidth, window.innerHeight);
-        this._renderer.setClearColor(0xffffff, 1);
+        this._renderer.setClearColor(0xffffff, 0);
 
-        document.body.appendChild(this._renderer.domElement);
+        this._container.appendChild(this._renderer.domElement);
 
         this._cameraControls = new CameraControls(this._camera, this._renderer.domElement);
 
@@ -132,7 +134,7 @@ export default class Viewer {
 
             this._stats.update();
 
-            this._renderer.render(this._scene, this._camera);
+            this._render();
         };
 
         const tunnelFolder = this._gui.addFolder('Tunnel');
@@ -227,6 +229,7 @@ export default class Viewer {
             gridHelperYZVisible: false,
             save: this._save.bind(this),
             load: this._load.bind(this),
+            saveScreenshot: this._saveScreenshot.bind(this),
         };
 
         const cameraFolder = this._gui.addFolder('Camera');
@@ -254,11 +257,16 @@ export default class Viewer {
                 this._gridHelperYZ.visible = value;
             });
 
-        const loadSaveFolder = this._gui.addFolder('Load / Save');
+        const screenshotFolder = this._gui.addFolder('Screenshot');
+        screenshotFolder.add(params, 'saveScreenshot').name('Save Screenshot (jpg)');
+
+        const loadSaveFolder = this._gui.addFolder('Load / Save Settings');
         loadSaveFolder.add(params, 'save').name('Save');
         loadSaveFolder.add(params, 'load').name('Load');
 
         animate();
+
+        window.addEventListener('resize', this._onWindowResize.bind(this));
     }
 
     public dispose(): void {
@@ -325,5 +333,85 @@ export default class Viewer {
             reader.readAsText(file);
         };
         input.click();
+    }
+
+    private _render(): void {
+        // if (this.freeze) return;
+        this._renderer.render(this._scene, this._camera);
+    }
+
+    private _onWindowResize(): void {
+        this._resize();
+    }
+    private _resize(width = window.innerWidth, height = window.innerHeight): void {
+        // const aspect = width / height;
+        // const { _camera: camera } = this;
+
+        // camera.left = (-frustumSize * aspect) / 2;
+        // camera.right = (frustumSize * aspect) / 2;
+        // camera.top = frustumSize / 2;
+        // camera.bottom = -frustumSize / 2;
+
+        // camera.updateProjectionMatrix();
+
+        // this._renderer.setSize(width, height);
+        // this._render();
+
+        const { _camera: camera } = this;
+        this._renderer.setSize(width, height);
+
+        camera.left = width / -2;
+        camera.right = width / 2;
+        camera.top = height / 2;
+        camera.bottom = height / -2;
+        camera.updateProjectionMatrix();
+
+        this._render();
+    }
+
+    private _beginHighResolution() {
+        this.freeze = true;
+        const scaleFactor = 2; // 2x resolution
+
+        const { innerWidth: width, innerHeight: height } = window;
+
+        const newWidth = width * scaleFactor;
+        const newHeight = height * scaleFactor;
+
+        this._resize(newWidth, newHeight);
+
+        this._cameraControls.zoom(scaleFactor * 10, false);
+        this._cameraControls.update(0);
+        this._render();
+    }
+
+    private _endHighResolution() {
+        const { innerWidth: width, innerHeight: height } = window;
+        this._renderer.setSize(width, height);
+        this.freeze = false;
+        this._resize();
+    }
+
+    private _saveScreenshot() {
+        this._beginHighResolution();
+        this._renderer.domElement.toBlob((blob) => {
+            if (blob == null) {
+                alert('Failed to save screenshot.');
+                return;
+            }
+
+            const a = document.createElement('a');
+            document.body.appendChild(a);
+            a.style.display = 'none';
+
+            const url = window.URL.createObjectURL(blob);
+            a.href = url;
+            a.download = 'screenshot.png';
+
+            this._endHighResolution();
+            a.click();
+        }),
+            'image/png',
+            1;
     }
 }

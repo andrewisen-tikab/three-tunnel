@@ -14,7 +14,7 @@ function App() {
         return () => Viewer.dispose();
     }, []);
 
-    return <div id="three" ref={ref} style={{ height: '100%' }} />;
+    return <div id="three" ref={ref} style={{ height: '100vh', width: '100vw' }} />;
 }
 
 export default App;
