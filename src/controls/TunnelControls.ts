@@ -34,7 +34,7 @@ export default class TunnelControls extends EventDispatcher {
     }
 
     addGrout() {
-        if (this._tunnel == null) return;
+        if (this._tunnel == null) throw new Error('Tunnel is not attached.');
         const grout = new Grout3D(this._tunnel);
         this._grout = grout;
         this._tunnel.groutGroup.add(grout);
