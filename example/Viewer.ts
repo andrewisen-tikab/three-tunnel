@@ -232,12 +232,15 @@ export default class Viewer {
             saveScreenshot: this._saveScreenshot.bind(this),
         };
 
-        const cameraFolder = this._gui.addFolder('Camera');
+        const cameraFolder = this._gui.addFolder('Camera').close();
         cameraFolder.add(params, 'fit').name('Zoom to Tunnel');
-        cameraFolder.add(params, 'fitProfile').name('Profile');
-        cameraFolder.add(params, 'fitCrossSection').name('Cross Section');
 
-        const appearanceFolder = this._gui.addFolder('Appearance');
+        const viewpointsFolder = this._gui.addFolder('Viewpoints');
+
+        viewpointsFolder.add(params, 'fitProfile').name('Profile');
+        viewpointsFolder.add(params, 'fitCrossSection').name('Cross Section');
+
+        const appearanceFolder = this._gui.addFolder('Appearance').close();
         appearanceFolder
             .add(params, 'gridHelperXZVisible')
             .name('Show Grid (XZ)')
@@ -257,12 +260,12 @@ export default class Viewer {
                 this._gridHelperYZ.visible = value;
             });
 
-        const screenshotFolder = this._gui.addFolder('Screenshot');
-        screenshotFolder.add(params, 'saveScreenshot').name('Save Screenshot (jpg)');
-
-        const loadSaveFolder = this._gui.addFolder('Load / Save Settings');
+        const loadSaveFolder = this._gui.addFolder('Load / Save Settings').close();
         loadSaveFolder.add(params, 'save').name('Save');
         loadSaveFolder.add(params, 'load').name('Load');
+
+        const screenshotFolder = this._gui.addFolder('Screenshot');
+        screenshotFolder.add(params, 'saveScreenshot').name('Save Screenshot (jpg)');
 
         animate();
 
