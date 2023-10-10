@@ -6,6 +6,7 @@ import { EventDispatcher } from './EventDispatcher';
 export default class TunnelControls extends EventDispatcher {
     private _tunnel: Tunnel3D | null = null;
     private _grout: Grout3D | null = null;
+    private _grouts: Grout3D[] = [];
 
     constructor() {
         super();
@@ -13,10 +14,14 @@ export default class TunnelControls extends EventDispatcher {
 
     attach(tunnel: Tunnel3D) {
         this._tunnel = tunnel;
+        // TODO: Move grouts to tunnel
+        this._grouts = [];
     }
 
     detach() {
         this._tunnel = null;
+        // TODO: Move grouts to tunnel
+        this._grouts = [];
     }
 
     getTunnel() {
@@ -35,15 +40,34 @@ export default class TunnelControls extends EventDispatcher {
 
     addGrout() {
         if (this._tunnel == null) throw new Error('Tunnel is not attached.');
+
         const grout = new Grout3D(this._tunnel);
+        grout.order = this._grouts.length;
+        this._grouts.push(grout);
+
         this._grout = grout;
         this._tunnel.groutGroup.add(grout);
         return grout;
     }
 
-    setGroutParams(params: Partial<AbstractGrout3DParams>) {
-        if (this._grout == null) return;
-        Object.assign(this._grout, params);
-        this._grout.update();
+    setGroutParams(index: number, params: Partial<AbstractGrout3DParams>) {
+        const grout = this._grouts[index];
+        if (grout == null) throw new Error('Grout is not found.');
+        Object.assign(grout, params);
+        this._updateGrouts();
+    }
+
+    public update() {
+        if (this._tunnel != null) this._tunnel.update();
+        this._updateGrouts();
+    }
+    private _updateGrouts() {
+        this._grouts[0].update();
+        for (let i = 1; i < this._grouts.length; i++) {
+            const previousGrout = this._grouts[i - 1];
+            const currentGrout = this._grouts[i];
+            currentGrout.update();
+            currentGrout.position.z = previousGrout.holeLength;
+        }
     }
 }

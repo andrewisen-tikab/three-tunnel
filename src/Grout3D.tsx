@@ -7,6 +7,8 @@ import Tunnel3D from './Tunnel3D';
 export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
     public isGrout3D: boolean = true;
 
+    public order: number = -1;
+
     public screenLength: number = 1;
 
     public angle: number = 5 * THREE.MathUtils.DEG2RAD;
@@ -63,6 +65,7 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
         const cylinder = new THREE.Mesh(geometry, material);
         cylinder.rotateX(Math.PI / 2);
         cylinder.position.set(0, 0, holeLength / 2);
+        cylinder.renderOrder = 2;
         this.add(cylinder);
 
         const { tunnelHeight, tunnelRoofHeight } = this._tunnel;
