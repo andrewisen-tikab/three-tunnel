@@ -50,9 +50,19 @@ const grout = tunnelControls.addGrout();
 const size = 200;
 const divisions = 200;
 
-const gridHelper = new THREE.GridHelper(size, divisions);
+const gridHelperXZ = new THREE.GridHelper(size, divisions);
+scene.add(gridHelperXZ);
 
-scene.add(gridHelper);
+const gridHelperXY = new THREE.GridHelper(size, divisions);
+gridHelperXY.rotation.x = Math.PI / 2;
+gridHelperXY.visible = false;
+scene.add(gridHelperXY);
+
+const gridHelperYZ = new THREE.GridHelper(size, divisions);
+gridHelperYZ.rotation.x = Math.PI / 2;
+gridHelperYZ.rotation.z = Math.PI / 2;
+gridHelperYZ.visible = false;
+scene.add(gridHelperYZ);
 
 cameraControls.setPosition(-100, 100, 100);
 
@@ -147,12 +157,35 @@ const params = {
 
         cameraControls.fitToBox(tunnel, true, { paddingTop: 1, paddingBottom: 1 });
     },
+    gridHelperXZVisible: true,
+    gridHelperXYVisible: false,
+    gridHelperYZVisible: false,
 };
 
 const cameraFolder = gui.addFolder('Camera');
 cameraFolder.add(params, 'fit').name('Zoom to Tunnel');
 cameraFolder.add(params, 'fitProfile').name('Profile');
 cameraFolder.add(params, 'fitCrossSection').name('Cross Section');
+
+const appearanceFolder = gui.addFolder('Appearance');
+appearanceFolder
+    .add(params, 'gridHelperXZVisible')
+    .name('Show Grid (XZ)')
+    .onChange((value) => {
+        gridHelperXZ.visible = value;
+    });
+appearanceFolder
+    .add(params, 'gridHelperXYVisible')
+    .name('Show Grid (XY)')
+    .onChange((value) => {
+        gridHelperXY.visible = value;
+    });
+appearanceFolder
+    .add(params, 'gridHelperYZVisible')
+    .name('Show Grid (YZ)')
+    .onChange((value) => {
+        gridHelperYZ.visible = value;
+    });
 
 animate();
 
