@@ -50,7 +50,9 @@ export default class Viewer {
 
     private _tunnel!: Tunnel3D;
 
-    private _grout!: Grout3D;
+    private _grout1!: Grout3D;
+
+    private _grout2!: Grout3D;
 
     public static get Instance() {
         return this._instance || (this._instance = new this());
@@ -96,7 +98,9 @@ export default class Viewer {
         this.tunnelControls = new TunnelControls();
         this.tunnelControls.attach(this._tunnel);
 
-        this._grout = this.tunnelControls.addGrout();
+        this._grout1 = this.tunnelControls.addGrout();
+        this._grout2 = this.tunnelControls.addGrout();
+        this.tunnelControls.update();
 
         const size = 200;
         const divisions = 200;
@@ -180,31 +184,60 @@ export default class Viewer {
             .listen();
 
         const groutFolder = this._gui.addFolder('Grout');
-        const groutParams = {
+        const grout1Folder = groutFolder.addFolder('#1');
+        const grout2Folder = groutFolder.addFolder('#2');
+
+        const grout1Params = {
+            visible: true,
+            angle: 5,
+            holeLength: 10,
+        };
+        const grout2Params = {
             visible: true,
             angle: 5,
             holeLength: 10,
         };
 
-        groutFolder
-            .add(groutParams, 'visible')
+        grout1Folder
+            .add(grout1Params, 'visible')
             .name('Visible')
             .onChange((value: boolean) => {
-                if (this._grout == null) return;
-                this._grout.visible = value;
+                if (this._grout1 == null) return;
+                this._grout1.visible = value;
             });
-        groutFolder
-            .add(groutParams, 'angle', 1, 20, 1)
+        grout1Folder
+            .add(grout1Params, 'angle', 1, 20, 1)
             .name('Angle [α] (degrees)')
             .onChange((value: number) => {
-                this.tunnelControls.setGroutParams({ angle: value * THREE.MathUtils.DEG2RAD });
+                this.tunnelControls.setGroutParams(0, { angle: value * THREE.MathUtils.DEG2RAD });
             });
 
-        groutFolder
-            .add(groutParams, 'holeLength', 1, 90)
+        grout1Folder
+            .add(grout1Params, 'holeLength', 1, 90)
             .name('Hole Length [L] (m)')
             .onChange((value: number) => {
-                this.tunnelControls.setGroutParams({ holeLength: value });
+                this.tunnelControls.setGroutParams(0, { holeLength: value });
+            });
+        grout2Folder
+            .add(grout2Params, 'visible')
+            .name('Visible')
+            .onChange((value: boolean) => {
+                if (this._grout1 == null) return;
+                this._grout2.visible = value;
+            });
+
+        grout2Folder
+            .add(grout2Params, 'angle', 1, 20, 1)
+            .name('Angle [α] (degrees)')
+            .onChange((value: number) => {
+                this.tunnelControls.setGroutParams(1, { angle: value * THREE.MathUtils.DEG2RAD });
+            });
+
+        grout2Folder
+            .add(grout2Params, 'holeLength', 1, 90)
+            .name('Hole Length [L] (m)')
+            .onChange((value: number) => {
+                this.tunnelControls.setGroutParams(1, { holeLength: value });
             });
 
         const params = {
@@ -237,8 +270,8 @@ export default class Viewer {
 
         const viewpointsFolder = this._gui.addFolder('Viewpoints');
 
-        viewpointsFolder.add(params, 'fitProfile').name('Profile');
-        viewpointsFolder.add(params, 'fitCrossSection').name('Cross Section');
+        viewpointsFolder.add(params, 'fitProfile').name('Profile (side)');
+        viewpointsFolder.add(params, 'fitCrossSection').name('Cross Section (front)');
 
         const appearanceFolder = this._gui.addFolder('Appearance').close();
         appearanceFolder
