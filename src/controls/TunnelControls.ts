@@ -94,6 +94,7 @@ export default class TunnelControls extends EventDispatcher {
     }
 
     private _setGroutPosition(previousGrout: Grout3D, currentGrout: Grout3D) {
-        currentGrout.position.z = previousGrout.holeLength;
+        const newZPosition = Math.cos(previousGrout.angle) * previousGrout.holeLength;
+        currentGrout.position.z = newZPosition;
     }
 }
