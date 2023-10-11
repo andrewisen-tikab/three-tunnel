@@ -15,7 +15,7 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
 
     public cutDepth: number = 1;
 
-    public overlap: number = 0;
+    public overlap: number = 5;
 
     public holeLength: number = 10;
 
