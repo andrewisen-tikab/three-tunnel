@@ -27,10 +27,18 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
 
     private _tunnel: Tunnel3D;
 
+    public geometry: THREE.BufferGeometry;
+
+    public cylinder: THREE.Mesh;
+
+    public positionOffset: number = 0;
+
     constructor(tunnel: Tunnel3D, params?: AbstractGrout3DParams) {
         super();
         this._tunnel = tunnel;
         if (params) this._params = params;
+        this.geometry = new THREE.BufferGeometry();
+        this.cylinder = new THREE.Mesh();
         this._build();
     }
 
@@ -55,24 +63,41 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
     private _build() {
         // if (!this._calculateNewParams())
         //     throw new Error('Grout3D: params are not correctly defined');
-
         const { holeLength, groutColorHEX } = this;
-
-        const geometry = new THREE.CylinderGeometry(1 / 3, 1 / 3, holeLength, 32);
+        this.geometry = new THREE.CylinderGeometry(1 / 3, 1 / 3, holeLength, 32);
         const material = new THREE.MeshBasicMaterial({
             color: groutColorHEX,
-            depthTest: false,
-            depthWrite: false,
+            // depthTest: false,
+            // depthWrite: false,
         });
-        const cylinder = new THREE.Mesh(geometry, material);
-        cylinder.rotateX(Math.PI / 2);
-        cylinder.position.set(0, 0, holeLength / 2);
-        cylinder.renderOrder = 2;
-        this.add(cylinder);
-
+        this.cylinder = new THREE.Mesh(this.geometry, material);
+        // this.cylinder.rotateX(Math.PI / 2);
+        // this.cylinder.position.set(0, 0, holeLength / 2);
+        // this.cylinder.renderOrder = 2;
+        this.add(this.cylinder);
         const { tunnelHeight, tunnelRoofHeight } = this._tunnel;
-        this.position.set(0, tunnelHeight + tunnelRoofHeight, 0);
-        this.rotation.set(-this.angle, 0, 0);
+        // this.position.set(0, tunnelHeight + tunnelRoofHeight, 0);
+        // this.rotation.set(-this.angle, 0, 0);
+        this.cylinder.position.set(
+            0,
+            tunnelHeight + tunnelRoofHeight,
+            holeLength / 2 + this.positionOffset,
+        );
+        this.cylinder.rotation.set(Math.PI / 2 - this.angle, 0, 0);
+        // {
+        //     this.geometry = new THREE.BoxGeometry(10, 10, 10);
+        //     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        //     this.cylinder = new THREE.Mesh(this.geometry, material);
+        //     const { tunnelHeight, tunnelRoofHeight } = this._tunnel;
+        //     const { holeLength } = this;
+        //     // this.cylinder.position.set(
+        //     //     0,
+        //     //     tunnelHeight + tunnelRoofHeight,
+        //     //     holeLength / 2 + this.positionOffset,
+        //     // );
+        //     this.cylinder.position.set(0, 20, 1);
+        //     this.add(this.cylinder);
+        // }
     }
 
     public update(params?: AbstractGrout3DParams): void {

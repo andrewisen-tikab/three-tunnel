@@ -107,7 +107,7 @@ export default class Viewer {
         this._tunnel = new Tunnel3D();
         this._group.add(this._tunnel);
 
-        this.tunnelControls = new TunnelControls();
+        this.tunnelControls = new TunnelControls(this._group);
         this.tunnelControls.attach(this._tunnel);
 
         this._grout1 = this.tunnelControls.addGrout();
@@ -309,7 +309,7 @@ export default class Viewer {
         updateGroutFolder(this.tunnelControls.groupGrouts);
 
         const planeParams = {
-            visible: false,
+            visible: true,
             xPosition: 0,
             strike: 0,
             dip: 0,
@@ -321,7 +321,7 @@ export default class Viewer {
         const planeAppearanceFolder = planeFolder.addFolder('Appearance');
         const planeGeometryFolder = planeFolder.addFolder('Geometry');
 
-        const geometry = new THREE.PlaneGeometry(100, 100);
+        const geometry = new THREE.BoxGeometry(100, 100, 0.1);
         const material = new THREE.MeshBasicMaterial({
             color: planeParams.planeColorHEX,
             side: THREE.DoubleSide,
@@ -330,7 +330,9 @@ export default class Viewer {
         });
         const plane = new THREE.Mesh(geometry, material);
         plane.visible = planeParams.visible;
+        plane.position.z = planeParams.xPosition;
         this._group.add(plane);
+        this.tunnelControls.addPlane(plane);
 
         planeAppearanceFolder
             .add(planeParams, 'visible')
@@ -344,6 +346,7 @@ export default class Viewer {
             .name('Strike (degrees)')
             .onChange((value: number) => {
                 plane.rotation.y = -value * THREE.MathUtils.DEG2RAD;
+                this.tunnelControls.updateCSG();
             });
 
         planeGeometryFolder
@@ -351,6 +354,7 @@ export default class Viewer {
             .name('Dip (degrees)')
             .onChange((value: number) => {
                 plane.rotation.x = (90 - value) * THREE.MathUtils.DEG2RAD;
+                this.tunnelControls.updateCSG();
             });
 
         planeAppearanceFolder
@@ -372,6 +376,7 @@ export default class Viewer {
             .name('X Position')
             .onChange((value: number) => {
                 plane.position.z = value;
+                this.tunnelControls.updateCSG();
             });
 
         const params = {
