@@ -61,13 +61,10 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
         const geometry = new THREE.CylinderGeometry(1 / 3, 1 / 3, holeLength, 32);
         const material = new THREE.MeshBasicMaterial({
             color: groutColorHEX,
-            depthTest: false,
-            depthWrite: false,
         });
         const cylinder = new THREE.Mesh(geometry, material);
         cylinder.rotateX(Math.PI / 2);
         cylinder.position.set(0, 0, holeLength / 2);
-        cylinder.renderOrder = 2;
         this.add(cylinder);
 
         const { tunnelHeight, tunnelRoofHeight } = this._tunnel;
