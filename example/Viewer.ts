@@ -576,8 +576,13 @@ export default class Viewer {
     private _endHighResolution() {
         const { innerWidth: width, innerHeight: height } = window;
         this._renderer.setSize(width, height);
+
         this.freeze = false;
         this._resize();
+
+        const scaleFactor = 2; // 2x resolution
+        this._cameraControls.zoom(-scaleFactor * 10, false);
+        this._cameraControls.update(0);
     }
 
     private _saveScreenshot() {
