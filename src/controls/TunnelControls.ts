@@ -64,7 +64,7 @@ export default class TunnelControls extends EventDispatcher {
         this._updateGrouts();
     }
     private _updateGrouts() {
-        this.groupGrouts ? this._updateGroutsAsGroup() : this._updateGroutsIndividiually();
+        this.groupGrouts ? this._updateGroutsAsGroup() : this._updateGroutsIndividually();
     }
 
     private _updateGroutsAsGroup() {
@@ -82,7 +82,7 @@ export default class TunnelControls extends EventDispatcher {
         }
     }
 
-    private _updateGroutsIndividiually() {
+    private _updateGroutsIndividually() {
         this._grouts[0].update();
 
         for (let i = 1; i < this._grouts.length; i++) {
