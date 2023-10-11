@@ -4,6 +4,8 @@ import { AbstractGrout3DParams, AbstractTunnel3DParams } from '../core';
 import { EventDispatcher } from './EventDispatcher';
 
 export default class TunnelControls extends EventDispatcher {
+    public groupGrouts: boolean = true;
+
     private _tunnel: Tunnel3D | null = null;
     private _grout: Grout3D | null = null;
     private _grouts: Grout3D[] = [];
@@ -62,14 +64,36 @@ export default class TunnelControls extends EventDispatcher {
         this._updateGrouts();
     }
     private _updateGrouts() {
+        this.groupGrouts ? this._updateGroutsAsGroup() : this._updateGroutsIndividiually();
+    }
+
+    private _updateGroutsAsGroup() {
         this._grouts[0].update();
-        // TODO: All grouts should be the same :)
+        const { angle, holeLength, cutDepth } = this._grouts[0];
+        for (let i = 1; i < this._grouts.length; i++) {
+            const previousGrout = this._grouts[i - 1];
+            const currentGrout = this._grouts[i];
+
+            currentGrout.angle = angle;
+            currentGrout.holeLength = holeLength;
+            currentGrout.cutDepth = cutDepth;
+            currentGrout.update();
+            this._setGroutPosition(previousGrout, currentGrout);
+        }
+    }
+
+    private _updateGroutsIndividiually() {
+        this._grouts[0].update();
 
         for (let i = 1; i < this._grouts.length; i++) {
             const previousGrout = this._grouts[i - 1];
             const currentGrout = this._grouts[i];
             currentGrout.update();
-            currentGrout.position.z = previousGrout.holeLength;
+            this._setGroutPosition(previousGrout, currentGrout);
         }
+    }
+
+    private _setGroutPosition(previousGrout: Grout3D, currentGrout: Grout3D) {
+        currentGrout.position.z = previousGrout.holeLength;
     }
 }
