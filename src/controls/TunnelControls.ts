@@ -7,7 +7,6 @@ export default class TunnelControls extends EventDispatcher {
     public groupGrouts: boolean = true;
 
     private _tunnel: Tunnel3D | null = null;
-    private _grout: Grout3D | null = null;
     private _grouts: Grout3D[] = [];
 
     constructor() {
@@ -34,10 +33,7 @@ export default class TunnelControls extends EventDispatcher {
         if (this._tunnel == null) return;
         Object.assign(this._tunnel, params);
         this._tunnel.update();
-
-        if (this._grout) {
-            this._grout.update();
-        }
+        this._updateGrouts();
     }
 
     addGrout() {
@@ -47,7 +43,6 @@ export default class TunnelControls extends EventDispatcher {
         grout.order = this._grouts.length;
         this._grouts.push(grout);
 
-        this._grout = grout;
         this._tunnel.groutGroup.add(grout);
         return grout;
     }
