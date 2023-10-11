@@ -212,6 +212,7 @@ export default class Viewer {
             visible: true,
             angle: 5,
             holeLength: 10,
+            overlap: 5,
             groutColorHEX: 0xff0000,
         };
 
@@ -219,6 +220,7 @@ export default class Viewer {
             visible: true,
             angle: 5,
             holeLength: 10,
+            overlap: 5,
             groutColorHEX: 0xff0000,
         };
 
@@ -241,6 +243,13 @@ export default class Viewer {
             .name('Hole Length [L] (m)')
             .onChange((value: number) => {
                 this.tunnelControls.setGroutParams(0, { holeLength: value });
+            });
+
+        grout1Folder
+            .add(grout1Params, 'overlap', 1, 10)
+            .name('Overlap [O] (m)')
+            .onChange((value: number) => {
+                this.tunnelControls.setGroutParams(0, { overlap: value });
             });
 
         grout1Folder
@@ -270,6 +279,13 @@ export default class Viewer {
             .name('Hole Length [L] (m)')
             .onChange((value: number) => {
                 this.tunnelControls.setGroutParams(1, { holeLength: value });
+            });
+
+        grout1Folder
+            .add(grout2Params, 'overlap', 1, 10)
+            .name('Overlap [O] (m)')
+            .onChange((value: number) => {
+                this.tunnelControls.setGroutParams(1, { overlap: value });
             });
 
         grout2Folder

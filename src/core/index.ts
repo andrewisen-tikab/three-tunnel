@@ -67,5 +67,5 @@ export type AbstractGrout3D = {
 
 export type AbstractGrout3DParams = Pick<
     AbstractGrout3D,
-    'holeLength' | 'angle' | 'cutDepth' | 'groutColorHEX'
+    'holeLength' | 'angle' | 'cutDepth' | 'groutColorHEX' | 'overlap'
 >;
