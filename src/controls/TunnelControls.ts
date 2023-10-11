@@ -47,6 +47,14 @@ export default class TunnelControls extends EventDispatcher {
         return grout;
     }
 
+    clearGrouts() {
+        this._grouts = [];
+    }
+
+    getGrouts() {
+        return [...this._grouts];
+    }
+
     setGroutParams(index: number, params: Partial<AbstractGrout3DParams>) {
         const grout = this._grouts[index];
         if (grout == null) throw new Error('Grout is not found.');

@@ -19,6 +19,8 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
 
     public holeLength: number = 10;
 
+    public groutColorHEX: number = 0xff0000;
+
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     private _params: AbstractGrout3DParams | null = null;
@@ -54,11 +56,11 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
         // if (!this._calculateNewParams())
         //     throw new Error('Grout3D: params are not correctly defined');
 
-        const { holeLength } = this;
+        const { holeLength, groutColorHEX } = this;
 
         const geometry = new THREE.CylinderGeometry(1 / 3, 1 / 3, holeLength, 32);
         const material = new THREE.MeshBasicMaterial({
-            color: 0xff0000,
+            color: groutColorHEX,
             depthTest: false,
             depthWrite: false,
         });

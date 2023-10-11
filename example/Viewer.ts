@@ -7,15 +7,25 @@ import CameraControls from 'camera-controls';
 import { saveAs } from 'file-saver';
 
 import { Tunnel3D, TunnelControls } from '../src';
-import { AbstractTunnel3D } from '../src/core';
+import { AbstractGrout3D, AbstractTunnel3D } from '../src/core';
 import Grout3D from '../src/Grout3D';
 
 CameraControls.install({ THREE });
 
-export type JSONParams = Pick<
+export type JSONTunnelParams = Pick<
     AbstractTunnel3D,
     'tunnelHeight' | 'tunnelRoofHeight' | 'tunnelWidth' | 'tunnelColorHEX'
 >;
+
+export type JSONGroutsParams = Pick<
+    AbstractGrout3D,
+    'angle' | 'cutDepth' | 'holeLength' | 'overlap' | 'groutColorHEX' | 'screenLength'
+>;
+
+export type JSONParams = {
+    tunnel: JSONTunnelParams;
+    grouts: JSONGroutsParams[];
+};
 
 export default class Viewer {
     private static _instance: Viewer;
@@ -200,11 +210,14 @@ export default class Viewer {
             visible: true,
             angle: 5,
             holeLength: 10,
+            groutColorHEX: 0xff0000,
         };
+
         const grout2Params = {
             visible: true,
             angle: 5,
             holeLength: 10,
+            groutColorHEX: 0xff0000,
         };
 
         grout1Folder
@@ -227,6 +240,14 @@ export default class Viewer {
             .onChange((value: number) => {
                 this.tunnelControls.setGroutParams(0, { holeLength: value });
             });
+
+        grout1Folder
+            .addColor(grout1Params, 'groutColorHEX')
+            .name('Color')
+            .onChange((value: number) => {
+                this.tunnelControls.setGroutParams(0, { groutColorHEX: value });
+            });
+
         grout2Folder
             .add(grout2Params, 'visible')
             .name('Visible')
@@ -247,6 +268,13 @@ export default class Viewer {
             .name('Hole Length [L] (m)')
             .onChange((value: number) => {
                 this.tunnelControls.setGroutParams(1, { holeLength: value });
+            });
+
+        grout2Folder
+            .addColor(grout2Params, 'groutColorHEX')
+            .name('Color')
+            .onChange((value: number) => {
+                this.tunnelControls.setGroutParams(1, { groutColorHEX: value });
             });
 
         const updateGroutFolder = (groupGrouts: boolean) => {
@@ -401,24 +429,46 @@ export default class Viewer {
     public toJSON(): JSONParams {
         const { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX } = this._tunnel;
 
+        const grouts: JSONGroutsParams[] = this.tunnelControls.getGrouts().map((grout) => {
+            const { angle, cutDepth, groutColorHEX, holeLength, overlap, screenLength } = grout;
+            return { angle, cutDepth, groutColorHEX, holeLength, overlap, screenLength };
+        });
+
         const object: JSONParams = {
-            tunnelHeight,
-            tunnelRoofHeight,
-            tunnelWidth,
-            tunnelColorHEX,
+            tunnel: { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX },
+            grouts,
         };
 
         return object;
     }
 
     public fromJSON(json: JSONParams): void {
-        const { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX } = json;
+        this._fromJSONTunnel(json);
+        this._fromJSONGrouts(json);
+    }
+
+    private _fromJSONTunnel(json: JSONParams): void {
+        const {
+            tunnel: { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX },
+        } = json;
+
         this.tunnelControls.setTunnelParams({
             tunnelHeight,
             tunnelRoofHeight,
             tunnelWidth,
             tunnelColorHEX,
         });
+    }
+
+    private _fromJSONGrouts(json: JSONParams): void {
+        const { grouts } = json;
+
+        // Only support 2 for now
+        if (grouts.length !== 2) throw new Error('Only support 2 grouts for now.');
+
+        for (let index = 0; index < grouts.length; index++) {
+            this.tunnelControls.setGroutParams(index, grouts[index]);
+        }
     }
 
     private _save(): void {
