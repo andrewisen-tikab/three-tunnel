@@ -63,6 +63,8 @@ export default class TunnelControls extends EventDispatcher {
     }
     private _updateGrouts() {
         this._grouts[0].update();
+        // TODO: All grouts should be the same :)
+
         for (let i = 1; i < this._grouts.length; i++) {
             const previousGrout = this._grouts[i - 1];
             const currentGrout = this._grouts[i];

@@ -240,6 +240,72 @@ export default class Viewer {
                 this.tunnelControls.setGroutParams(1, { holeLength: value });
             });
 
+        const planeParams = {
+            visible: false,
+            xPosition: 0,
+            strike: 0,
+            dip: 0,
+            opacity: 0.5,
+            planeColorHEX: 0xffff00,
+        };
+
+        const planeFolder = this._gui.addFolder('Plane').close();
+        const planeAppearanceFolder = planeFolder.addFolder('Appearance');
+        const planeGeometryFolder = planeFolder.addFolder('Geometry');
+
+        const geometry = new THREE.PlaneGeometry(100, 100);
+        const material = new THREE.MeshBasicMaterial({
+            color: planeParams.planeColorHEX,
+            side: THREE.DoubleSide,
+            opacity: planeParams.opacity,
+            transparent: true,
+        });
+        const plane = new THREE.Mesh(geometry, material);
+        plane.visible = planeParams.visible;
+        this._group.add(plane);
+
+        planeAppearanceFolder
+            .add(planeParams, 'visible')
+            .name('Visible')
+            .onChange((value: boolean) => {
+                plane.visible = value;
+            });
+
+        planeGeometryFolder
+            .add(planeParams, 'strike', 0, 360, 1)
+            .name('Strike (degrees)')
+            .onChange((value: number) => {
+                plane.rotation.y = -value * THREE.MathUtils.DEG2RAD;
+            });
+
+        planeGeometryFolder
+            .add(planeParams, 'dip', 0, 90, 1)
+            .name('Dip (degrees)')
+            .onChange((value: number) => {
+                plane.rotation.x = (90 - value) * THREE.MathUtils.DEG2RAD;
+            });
+
+        planeAppearanceFolder
+            .addColor(planeParams, 'planeColorHEX')
+            .name('Color')
+            .onChange((value: number) => {
+                plane.material.color.setHex(value);
+            });
+
+        planeAppearanceFolder
+            .add(planeParams, 'opacity', 0, 1, 0.01)
+            .name('Opacity')
+            .onChange((value: number) => {
+                plane.material.opacity = value;
+            });
+
+        planeGeometryFolder
+            .add(planeParams, 'xPosition', -100, 100)
+            .name('X Position')
+            .onChange((value: number) => {
+                plane.position.z = value;
+            });
+
         const params = {
             fit,
             fitProfile: () => {
@@ -297,12 +363,12 @@ export default class Viewer {
         loadSaveFolder.add(params, 'save').name('Save');
         loadSaveFolder.add(params, 'load').name('Load');
 
-        const screenshotFolder = this._gui.addFolder('Screenshot');
-        screenshotFolder.add(params, 'saveScreenshot').name('Save Screenshot (jpg)');
-
         animate();
 
         window.addEventListener('resize', this._onWindowResize.bind(this));
+
+        const screenshotFolder = this._gui.addFolder('Screenshot');
+        screenshotFolder.add(params, 'saveScreenshot').name('Save Screenshot (jpg)');
     }
 
     public dispose(): void {
