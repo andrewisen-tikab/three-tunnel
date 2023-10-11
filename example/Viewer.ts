@@ -9,6 +9,7 @@ import { saveAs } from 'file-saver';
 import { Tunnel3D, TunnelControls } from '../src';
 import { AbstractGrout3D, AbstractTunnel3D } from '../src/core';
 import Grout3D from '../src/Grout3D';
+import { VERSION } from '../src/version';
 
 CameraControls.install({ THREE });
 
@@ -25,6 +26,7 @@ export type JSONGroutsParams = Pick<
 export type JSONParams = {
     tunnel: JSONTunnelParams;
     grouts: JSONGroutsParams[];
+    version: string;
 };
 
 export default class Viewer {
@@ -437,14 +439,26 @@ export default class Viewer {
         const object: JSONParams = {
             tunnel: { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX },
             grouts,
+            version: VERSION,
         };
 
         return object;
     }
 
     public fromJSON(json: JSONParams): void {
+        this._checkVersion(json);
+
         this._fromJSONTunnel(json);
         this._fromJSONGrouts(json);
+    }
+
+    private _checkVersion(json: JSONParams): void {
+        const { version = '0.0.0' } = json;
+        if (version !== VERSION) {
+            alert(
+                `Version mismatch. Expected ${VERSION} but got ${version}. Results may be unexpected.`,
+            );
+        }
     }
 
     private _fromJSONTunnel(json: JSONParams): void {
