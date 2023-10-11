@@ -55,8 +55,17 @@ export type AbstractGrout3D = {
      * Parallel to the tunnel
      */
     screenLength: number;
+    /**
+     * Color as hexadecimal.
+     *
+     * E.g. 0xff0000 for red.
+     */
+    groutColorHEX: number;
 
     update(): void;
 };
 
-export type AbstractGrout3DParams = Pick<AbstractGrout3D, 'holeLength' | 'angle' | 'cutDepth'>;
+export type AbstractGrout3DParams = Pick<
+    AbstractGrout3D,
+    'holeLength' | 'angle' | 'cutDepth' | 'groutColorHEX'
+>;

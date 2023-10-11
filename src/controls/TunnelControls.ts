@@ -7,7 +7,6 @@ export default class TunnelControls extends EventDispatcher {
     public groupGrouts: boolean = true;
 
     private _tunnel: Tunnel3D | null = null;
-    private _grout: Grout3D | null = null;
     private _grouts: Grout3D[] = [];
 
     constructor() {
@@ -34,10 +33,7 @@ export default class TunnelControls extends EventDispatcher {
         if (this._tunnel == null) return;
         Object.assign(this._tunnel, params);
         this._tunnel.update();
-
-        if (this._grout) {
-            this._grout.update();
-        }
+        this._updateGrouts();
     }
 
     addGrout() {
@@ -47,9 +43,16 @@ export default class TunnelControls extends EventDispatcher {
         grout.order = this._grouts.length;
         this._grouts.push(grout);
 
-        this._grout = grout;
         this._tunnel.groutGroup.add(grout);
         return grout;
+    }
+
+    clearGrouts() {
+        this._grouts = [];
+    }
+
+    getGrouts() {
+        return [...this._grouts];
     }
 
     setGroutParams(index: number, params: Partial<AbstractGrout3DParams>) {
@@ -64,7 +67,7 @@ export default class TunnelControls extends EventDispatcher {
         this._updateGrouts();
     }
     private _updateGrouts() {
-        this.groupGrouts ? this._updateGroutsAsGroup() : this._updateGroutsIndividiually();
+        this.groupGrouts ? this._updateGroutsAsGroup() : this._updateGroutsIndividually();
     }
 
     private _updateGroutsAsGroup() {
@@ -82,7 +85,7 @@ export default class TunnelControls extends EventDispatcher {
         }
     }
 
-    private _updateGroutsIndividiually() {
+    private _updateGroutsIndividually() {
         this._grouts[0].update();
 
         for (let i = 1; i < this._grouts.length; i++) {
@@ -94,6 +97,7 @@ export default class TunnelControls extends EventDispatcher {
     }
 
     private _setGroutPosition(previousGrout: Grout3D, currentGrout: Grout3D) {
-        currentGrout.position.z = previousGrout.holeLength;
+        const newZPosition = Math.cos(previousGrout.angle) * previousGrout.holeLength;
+        currentGrout.position.z = newZPosition;
     }
 }
