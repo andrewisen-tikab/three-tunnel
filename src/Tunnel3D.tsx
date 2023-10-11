@@ -66,7 +66,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         const edges = new THREE.EdgesGeometry(tunnelGeometry);
         const line = new THREE.LineSegments(
             edges,
-            new THREE.LineBasicMaterial({ color: 0xffffff }),
+            new THREE.LineBasicMaterial({ color: 0x000000 }),
         );
         group.add(line);
 
