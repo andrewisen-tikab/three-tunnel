@@ -183,7 +183,16 @@ export default class Viewer {
             })
             .listen();
 
-        const groutFolder = this._gui.addFolder('Grout');
+        const groutFolder = this._gui.addFolder('Grouts');
+
+        groutFolder
+            .add(this.tunnelControls, 'groupGrouts')
+            .name('Group Grouts')
+            .onChange((value: boolean) => {
+                this.tunnelControls.groupGrouts = value;
+                updateGroutFolder(value);
+            });
+
         const grout1Folder = groutFolder.addFolder('#1');
         const grout2Folder = groutFolder.addFolder('#2');
 
@@ -226,19 +235,32 @@ export default class Viewer {
                 this._grout2.visible = value;
             });
 
-        grout2Folder
+        const angle2 = grout2Folder
             .add(grout2Params, 'angle', 1, 20, 1)
             .name('Angle [α] (degrees)')
             .onChange((value: number) => {
                 this.tunnelControls.setGroutParams(1, { angle: value * THREE.MathUtils.DEG2RAD });
             });
 
-        grout2Folder
+        const holeLength2 = grout2Folder
             .add(grout2Params, 'holeLength', 1, 90)
             .name('Hole Length [L] (m)')
             .onChange((value: number) => {
                 this.tunnelControls.setGroutParams(1, { holeLength: value });
             });
+
+        const updateGroutFolder = (groupGrouts: boolean) => {
+            if (groupGrouts) {
+                angle2.disable();
+                holeLength2.disable();
+            } else {
+                angle2.enable();
+                holeLength2.enable();
+            }
+            this.tunnelControls.update();
+        };
+
+        updateGroutFolder(this.tunnelControls.groupGrouts);
 
         const planeParams = {
             visible: false,
