@@ -1,27 +1,50 @@
-# React + TypeScript + Vite
+# three-tunnel
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+`three-tunnel` is a tunnel & grouting library for [three.js](https://threejs.org/).
+It's purpose is to help rock engineers to design grouts.
 
-Currently, two official plugins are available:
+<img src="https://github.com/andrewisen-tikab/three-tunnel/blob/dev/resources/example.gif?raw=true" width="100%" />
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Installation
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
+```bash
+npm install three-tunnel
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## Usage
+
+Begin by adding a tunnel.
+
+```ts
+import { Tunnel3D } from 'three-tunnel';
+
+const tunnel = new Tunnel3D();
+scene.add(tunnel);
+```
+
+To help you design the tunnel, you can add a controller.
+
+```ts
+import { TunnelControls } from 'three-tunnel';
+const tunnelControls = new TunnelControls();
+tunnelControls.attach(this._tunnel);
+```
+
+You can now add grouts to the tunnel.
+
+```ts
+const grout1 = this.tunnelControls.addGrout();
+const grout2 = this.tunnelControls.addGrout();
+this.tunnelControls.update();
+```
+
+## Example
+
+A complete example can be found in the `example` folder.
+Or, you can run the demo at:
+
+[https://andrewisen-tikab.github.io/three-tunnel/example/](https://andrewisen-tikab.github.io/three-tunnel/example/)
+
+## Status
+
+This is a work in progress. It's not production ready.
