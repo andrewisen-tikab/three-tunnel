@@ -547,6 +547,8 @@ export default class Viewer {
         input.click();
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     private _update(): void {
         this.tunnelControls.update();
     }
