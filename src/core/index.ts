@@ -69,3 +69,14 @@ export type AbstractGrout3DParams = Pick<
     AbstractGrout3D,
     'holeLength' | 'angle' | 'cutDepth' | 'groutColorHEX' | 'overlap'
 >;
+
+export type AbstractFracturePlane3D = {
+    visible: boolean;
+    xPosition: number;
+    strike: number;
+    dip: number;
+    opacity: number;
+    planeColorHEX: number;
+};
+
+export type AbstractFracturePlane3DParams = AbstractFracturePlane3D;
