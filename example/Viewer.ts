@@ -337,7 +337,7 @@ export default class Viewer {
         const planeAppearanceFolder = planeFolder.addFolder('Appearance');
         const planeGeometryFolder = planeFolder.addFolder('Geometry');
 
-        const geometry = new THREE.PlaneGeometry(100, 100);
+        const geometry = new THREE.BoxGeometry(100, 100, 0.1);
         const material = new THREE.MeshBasicMaterial({
             color: planeParams.planeColorHEX,
             side: THREE.DoubleSide,
