@@ -213,8 +213,16 @@ export default class Viewer {
                 this.tunnelControls.update();
             });
 
-        const grout1Folder = groutFolder.addFolder('#1');
-        const grout2Folder = groutFolder.addFolder('#2');
+        groutFolder
+            .add(this.tunnelControls, 'showSpread')
+            .name('Show Spread Grouts')
+            .onChange((value: boolean) => {
+                this.tunnelControls.showSpread = value;
+                this.tunnelControls.update();
+            });
+
+        const grout1Folder = groutFolder.addFolder('#1').close();
+        const grout2Folder = groutFolder.addFolder('#2').close();
 
         const grout1Params = {
             visible: true,
@@ -329,7 +337,7 @@ export default class Viewer {
         const planeAppearanceFolder = planeFolder.addFolder('Appearance');
         const planeGeometryFolder = planeFolder.addFolder('Geometry');
 
-        const geometry = new THREE.PlaneGeometry(100, 100);
+        const geometry = new THREE.BoxGeometry(100, 100, 0.1);
         const material = new THREE.MeshBasicMaterial({
             color: planeParams.planeColorHEX,
             side: THREE.DoubleSide,
