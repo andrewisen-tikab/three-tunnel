@@ -213,8 +213,16 @@ export default class Viewer {
                 this.tunnelControls.update();
             });
 
-        const grout1Folder = groutFolder.addFolder('#1');
-        const grout2Folder = groutFolder.addFolder('#2');
+        groutFolder
+            .add(this.tunnelControls, 'showSpread')
+            .name('Show Spread Grouts')
+            .onChange((value: boolean) => {
+                this.tunnelControls.showSpread = value;
+                this.tunnelControls.update();
+            });
+
+        const grout1Folder = groutFolder.addFolder('#1').close();
+        const grout2Folder = groutFolder.addFolder('#2').close();
 
         const grout1Params = {
             visible: true,

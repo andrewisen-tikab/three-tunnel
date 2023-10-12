@@ -8,12 +8,26 @@ import { EventDispatcher } from './EventDispatcher';
 export default class TunnelControls extends EventDispatcher {
     public groupGrouts: boolean = true;
     public showMirror: boolean = true;
+    public showSpread: boolean = true;
+
+    public spreadConfig = {
+        /**
+         * On each side of the center
+         */
+        numberOfGrouts: 2,
+        spreadDistance: 3,
+        /**
+         * Angle in degrees
+         */
+        spreadAngle: 10,
+    };
 
     private _tunnel: Tunnel3D | null = null;
     private _grouts: Grout3D[] = [];
     private _group: THREE.Object3D;
     private _result: THREE.Group;
     private _mirror: THREE.Group;
+    private _spread: THREE.Group;
 
     constructor(group: THREE.Object3D) {
         super();
@@ -24,6 +38,9 @@ export default class TunnelControls extends EventDispatcher {
 
         this._mirror = new THREE.Group();
         this._result.add(this._mirror);
+
+        this._spread = new THREE.Group();
+        this._result.add(this._spread);
     }
 
     attach(tunnel: Tunnel3D) {
@@ -83,6 +100,7 @@ export default class TunnelControls extends EventDispatcher {
     private _updateGrouts() {
         this.groupGrouts ? this._updateGroutsAsGroup() : this._updateGroutsIndividually();
         this._generateMirroredGrouts();
+        this._generateSpreadGrouts();
     }
 
     private _updateGroutsAsGroup() {
@@ -134,5 +152,56 @@ export default class TunnelControls extends EventDispatcher {
         });
 
         this._mirror.add(...mirrorGrouts);
+    }
+
+    private _generateSpreadGrouts() {
+        this._spread.clear();
+        if (this._tunnel == null) return;
+        if (this.showSpread === false) return;
+
+        const { numberOfGrouts, spreadDistance, spreadAngle } = this.spreadConfig;
+        const spreadGrouts = this._grouts.flatMap((grout) => {
+            const json = grout.toJSON();
+            const grouts: Grout3D[] = [];
+
+            for (let i = 0; i < numberOfGrouts; i++) {
+                for (let j = 0; j < 2; j++) {
+                    const spread = new Grout3D(this._tunnel!);
+                    spread.fromJSON(json);
+                    spread.position.x =
+                        j === 0 ? +spreadDistance * (i + 1) : -spreadDistance * (i + 1);
+                    spread.rotateY(
+                        j === 0
+                            ? +(spreadAngle * THREE.MathUtils.DEG2RAD)
+                            : -(spreadAngle * THREE.MathUtils.DEG2RAD),
+                    );
+                    spread.position.z = grout.position.z;
+
+                    grouts.push(spread);
+
+                    if (this.showMirror == false) continue;
+
+                    const mirror = new Grout3D(this._tunnel!);
+                    mirror.fromJSON(json);
+                    mirror.rotation.x *= -1;
+
+                    mirror.position.x =
+                        j === 0 ? +spreadDistance * (i + 1) : -spreadDistance * (i + 1);
+                    mirror.rotateY(
+                        j === 0
+                            ? +(spreadAngle * THREE.MathUtils.DEG2RAD)
+                            : -(spreadAngle * THREE.MathUtils.DEG2RAD),
+                    );
+
+                    mirror.position.z = grout.position.z;
+                    mirror.position.y = 0;
+                    grouts.push(mirror);
+                }
+            }
+
+            return grouts;
+        });
+
+        this._spread.add(...spreadGrouts);
     }
 }
