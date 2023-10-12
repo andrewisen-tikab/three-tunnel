@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 import Grout3D from '../Grout3D';
 import Tunnel3D from '../Tunnel3D';
 import { AbstractGrout3DParams, AbstractTunnel3DParams } from '../core';
@@ -5,16 +7,28 @@ import { EventDispatcher } from './EventDispatcher';
 
 export default class TunnelControls extends EventDispatcher {
     public groupGrouts: boolean = true;
+    public showMirror: boolean = true;
 
     private _tunnel: Tunnel3D | null = null;
     private _grouts: Grout3D[] = [];
+    private _group: THREE.Object3D;
+    private _result: THREE.Group;
+    private _mirror: THREE.Group;
 
-    constructor() {
+    constructor(group: THREE.Object3D) {
         super();
+        this._group = group;
+
+        this._result = new THREE.Group();
+        this._group.add(this._result);
+
+        this._mirror = new THREE.Group();
+        this._result.add(this._mirror);
     }
 
     attach(tunnel: Tunnel3D) {
         this._tunnel = tunnel;
+
         // TODO: Move grouts to tunnel
         this._grouts = [];
     }
@@ -68,6 +82,7 @@ export default class TunnelControls extends EventDispatcher {
     }
     private _updateGrouts() {
         this.groupGrouts ? this._updateGroutsAsGroup() : this._updateGroutsIndividually();
+        this._generateMirroredGrouts();
     }
 
     private _updateGroutsAsGroup() {
@@ -98,7 +113,26 @@ export default class TunnelControls extends EventDispatcher {
 
     private _setGroutPosition(previousGrout: Grout3D, currentGrout: Grout3D) {
         const newZPosition = Math.cos(previousGrout.angle) * previousGrout.holeLength;
-
         currentGrout.position.z = newZPosition - currentGrout.overlap;
+    }
+
+    private _generateMirroredGrouts() {
+        this._mirror.clear();
+        if (this._tunnel == null) return;
+        if (this.showMirror === false) return;
+
+        const mirrorGrouts = this._grouts.map((grout) => {
+            const json = grout.toJSON();
+            const mirror = new Grout3D(this._tunnel!);
+            mirror.fromJSON(json);
+            mirror.rotation.x *= -1;
+
+            mirror.position.z = grout.position.z;
+            mirror.position.y = 0;
+
+            return mirror;
+        });
+
+        this._mirror.add(...mirrorGrouts);
     }
 }

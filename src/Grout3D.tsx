@@ -77,4 +77,21 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
         this.clear();
         this._build();
     }
+
+    public toJSON(): AbstractGrout3DParams {
+        const { angle, cutDepth, groutColorHEX, holeLength, overlap } = this;
+        const object: AbstractGrout3DParams = {
+            angle,
+            cutDepth,
+            groutColorHEX,
+            holeLength,
+            overlap,
+        };
+        return object;
+    }
+
+    public fromJSON(json: AbstractGrout3DParams): void {
+        Object.assign(this, json);
+        this.update();
+    }
 }
