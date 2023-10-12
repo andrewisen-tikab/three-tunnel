@@ -107,7 +107,7 @@ export default class Viewer {
         this._tunnel = new Tunnel3D();
         this._group.add(this._tunnel);
 
-        this.tunnelControls = new TunnelControls();
+        this.tunnelControls = new TunnelControls(this._group);
         this.tunnelControls.attach(this._tunnel);
 
         this._grout1 = this.tunnelControls.addGrout();
@@ -203,6 +203,14 @@ export default class Viewer {
             .onChange((value: boolean) => {
                 this.tunnelControls.groupGrouts = value;
                 updateGroutFolder(value);
+            });
+
+        groutFolder
+            .add(this.tunnelControls, 'showMirror')
+            .name('Show Mirrored Grouts')
+            .onChange((value: boolean) => {
+                this.tunnelControls.showMirror = value;
+                this.tunnelControls.update();
             });
 
         const grout1Folder = groutFolder.addFolder('#1');
@@ -537,6 +545,10 @@ export default class Viewer {
             reader.readAsText(file);
         };
         input.click();
+    }
+
+    private _update(): void {
+        this.tunnelControls.update();
     }
 
     private _render(): void {
