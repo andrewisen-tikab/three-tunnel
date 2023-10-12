@@ -6,9 +6,9 @@ import CameraControls from 'camera-controls';
 
 import { saveAs } from 'file-saver';
 
-import { Tunnel3D, TunnelControls } from '../src';
-import { AbstractGrout3D, AbstractTunnel3D } from '../src/core';
-import Grout3D from '../src/Grout3D';
+import { Tunnel3D, TunnelControls, Grout3D, FracturePlane3D } from '../src';
+import { AbstractFracturePlane3DParams, AbstractGrout3D, AbstractTunnel3D } from '../src/core';
+
 import { VERSION } from '../src/version';
 
 CameraControls.install({ THREE });
@@ -23,9 +23,12 @@ export type JSONGroutsParams = Pick<
     'angle' | 'cutDepth' | 'holeLength' | 'overlap' | 'groutColorHEX' | 'screenLength'
 >;
 
+export type JSONFracturePlaneParams = AbstractFracturePlane3DParams;
+
 export type JSONParams = {
     tunnel: JSONTunnelParams;
     grouts: JSONGroutsParams[];
+    plane: JSONFracturePlaneParams;
     version: string;
 };
 
@@ -65,6 +68,8 @@ export default class Viewer {
     private _grout1!: Grout3D;
 
     private _grout2!: Grout3D;
+
+    private _plane!: FracturePlane3D;
 
     public static get Instance() {
         return this._instance || (this._instance = new this());
@@ -324,71 +329,65 @@ export default class Viewer {
 
         updateGroutFolder(this.tunnelControls.groupGrouts);
 
-        const planeParams = {
-            visible: false,
-            xPosition: 0,
-            strike: 0,
-            dip: 0,
-            opacity: 0.5,
-            planeColorHEX: 0xffff00,
-        };
-
         const planeFolder = this._gui.addFolder('Plane').close();
         const planeAppearanceFolder = planeFolder.addFolder('Appearance');
         const planeGeometryFolder = planeFolder.addFolder('Geometry');
 
-        const geometry = new THREE.BoxGeometry(100, 100, 0.1);
-        const material = new THREE.MeshBasicMaterial({
-            color: planeParams.planeColorHEX,
-            side: THREE.DoubleSide,
-            opacity: planeParams.opacity,
-            transparent: true,
-        });
-        const plane = new THREE.Mesh(geometry, material);
-        plane.visible = planeParams.visible;
-        this._group.add(plane);
+        this._plane = new FracturePlane3D();
+        this._group.add(this._plane);
 
         planeAppearanceFolder
-            .add(planeParams, 'visible')
+            .add(this._plane, 'visible')
             .name('Visible')
             .onChange((value: boolean) => {
-                plane.visible = value;
-            });
+                this._plane.visible = value;
+            })
+            .listen();
 
         planeGeometryFolder
-            .add(planeParams, 'strike', 0, 360, 1)
+            .add(this._plane, 'strike', 0, 360, 1)
             .name('Strike (degrees)')
             .onChange((value: number) => {
-                plane.rotation.y = -value * THREE.MathUtils.DEG2RAD;
-            });
+                this._plane.strike = value;
+                this._plane.update();
+            })
+            .listen();
 
         planeGeometryFolder
-            .add(planeParams, 'dip', 0, 90, 1)
+            .add(this._plane, 'dip', 0, 90, 1)
             .name('Dip (degrees)')
             .onChange((value: number) => {
-                plane.rotation.x = (90 - value) * THREE.MathUtils.DEG2RAD;
-            });
+                this._plane.dip = value;
+                this._plane.update();
+            })
+            .listen();
 
         planeAppearanceFolder
-            .addColor(planeParams, 'planeColorHEX')
+            .addColor(this._plane, 'planeColorHEX')
             .name('Color')
             .onChange((value: number) => {
-                plane.material.color.setHex(value);
-            });
+                this._plane.planeColorHEX = value;
+                this._plane.update();
+            })
+            .listen();
 
         planeAppearanceFolder
-            .add(planeParams, 'opacity', 0, 1, 0.01)
+            .add(this._plane, 'opacity', 0, 1, 0.01)
             .name('Opacity')
             .onChange((value: number) => {
-                plane.material.opacity = value;
-            });
+                this._plane.opacity = value;
+                this._plane.update();
+            })
+            .listen();
 
         planeGeometryFolder
-            .add(planeParams, 'xPosition', -100, 100)
+            .add(this._plane, 'xPosition', -100, 100)
             .name('X Position')
             .onChange((value: number) => {
-                plane.position.z = value;
-            });
+                this._plane.xPosition = value;
+                this._plane.update();
+            })
+            .listen();
 
         const params = {
             fit,
@@ -471,6 +470,7 @@ export default class Viewer {
         const object: JSONParams = {
             tunnel: { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX },
             grouts,
+            plane: this._plane.toJSON(),
             version: VERSION,
         };
 
@@ -482,6 +482,7 @@ export default class Viewer {
 
         this._fromJSONTunnel(json);
         this._fromJSONGrouts(json);
+        this._fromJSONFracturePlane(json);
     }
 
     private _checkVersion(json: JSONParams): void {
@@ -515,6 +516,11 @@ export default class Viewer {
         for (let index = 0; index < grouts.length; index++) {
             this.tunnelControls.setGroutParams(index, grouts[index]);
         }
+    }
+
+    private _fromJSONFracturePlane(json: JSONParams): void {
+        const { plane } = json;
+        this._plane.fromJSON(plane);
     }
 
     private _save(): void {
