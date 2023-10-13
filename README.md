@@ -45,6 +45,11 @@ Or, you can run the demo at:
 
 [https://andrewisen-tikab.github.io/three-tunnel/example/](https://andrewisen-tikab.github.io/three-tunnel/example/)
 
+## Docs
+
+Auto-generated docs can be found here:
+[https://andrewisen-tikab.github.io/three-tunnel/docs/](https://andrewisen-tikab.github.io/three-tunnel/docs/)
+
 ## Status
 
 This is a work in progress. It's not production ready.
