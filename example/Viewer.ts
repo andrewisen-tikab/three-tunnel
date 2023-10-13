@@ -7,7 +7,12 @@ import CameraControls from 'camera-controls';
 import { saveAs } from 'file-saver';
 
 import { Tunnel3D, TunnelControls, Grout3D, FracturePlane3D } from '../src';
-import { AbstractFracturePlane3DParams, AbstractGrout3D, AbstractTunnel3D } from '../src/core';
+import {
+    AbstractFracturePlane3DParams,
+    AbstractGrout3D,
+    AbstractTunnel3D,
+    AbstractTunnelControlsParams,
+} from '../src/core';
 
 import { VERSION } from '../src/version';
 
@@ -24,11 +29,13 @@ export type JSONGroutsParams = Pick<
 >;
 
 export type JSONFracturePlaneParams = AbstractFracturePlane3DParams;
+export type JSONControlsParams = AbstractTunnelControlsParams;
 
 export type JSONParams = {
     tunnel: JSONTunnelParams;
     grouts: JSONGroutsParams[];
     plane: JSONFracturePlaneParams;
+    controls: JSONControlsParams;
     version: string;
 };
 
@@ -81,7 +88,7 @@ export default class Viewer {
         this._stats = new Stats();
         document.body.appendChild(this._stats.dom);
 
-        this._gui = new GUI();
+        this._gui = new GUI().title(`three-tunnel v${VERSION}`);
 
         this._clock = new THREE.Clock();
 
@@ -223,6 +230,30 @@ export default class Viewer {
             .name('Show Spread Grouts')
             .onChange((value: boolean) => {
                 this.tunnelControls.showSpread = value;
+                this.tunnelControls.update();
+            });
+
+        groutFolder
+            .add(this.tunnelControls.spreadConfig, 'numberOfGrouts', 1, 10, 1)
+            .name('Number of Grouts')
+            .onChange((value: number) => {
+                this.tunnelControls.spreadConfig.numberOfGrouts = value;
+                this.tunnelControls.update();
+            });
+
+        groutFolder
+            .add(this.tunnelControls.spreadConfig, 'spreadAngle', 1, 90, 1)
+            .name('Number of Grouts')
+            .onChange((value: number) => {
+                this.tunnelControls.spreadConfig.spreadAngle = value;
+                this.tunnelControls.update();
+            });
+
+        groutFolder
+            .add(this.tunnelControls.spreadConfig, 'spreadDistance', 1, 20, 1)
+            .name('Number of Grouts')
+            .onChange((value: number) => {
+                this.tunnelControls.spreadConfig.spreadDistance = value;
                 this.tunnelControls.update();
             });
 
@@ -471,6 +502,7 @@ export default class Viewer {
             tunnel: { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX },
             grouts,
             plane: this._plane.toJSON(),
+            controls: this.tunnelControls.toJSON(),
             version: VERSION,
         };
 
@@ -483,6 +515,7 @@ export default class Viewer {
         this._fromJSONTunnel(json);
         this._fromJSONGrouts(json);
         this._fromJSONFracturePlane(json);
+        this._fromJSONControls(json);
     }
 
     private _checkVersion(json: JSONParams): void {
@@ -521,6 +554,11 @@ export default class Viewer {
     private _fromJSONFracturePlane(json: JSONParams): void {
         const { plane } = json;
         this._plane.fromJSON(plane);
+    }
+
+    private _fromJSONControls(json: JSONParams): void {
+        const { controls } = json;
+        this.tunnelControls.fromJSON(controls);
     }
 
     private _save(): void {

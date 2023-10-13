@@ -80,3 +80,15 @@ export type AbstractFracturePlane3D = {
 };
 
 export type AbstractFracturePlane3DParams = AbstractFracturePlane3D;
+
+export type AbstractTunnelControlsParams = {
+    /**
+     * On each side of the center
+     */
+    numberOfGrouts: number;
+    spreadDistance: number;
+    /**
+     * Angle in degrees
+     */
+    spreadAngle: number;
+};

@@ -2,7 +2,11 @@ import * as THREE from 'three';
 
 import Grout3D from '../Grout3D';
 import Tunnel3D from '../Tunnel3D';
-import { AbstractGrout3DParams, AbstractTunnel3DParams } from '../core';
+import {
+    AbstractGrout3DParams,
+    AbstractTunnel3DParams,
+    AbstractTunnelControlsParams,
+} from '../core';
 import { EventDispatcher } from './EventDispatcher';
 
 export default class TunnelControls extends EventDispatcher {
@@ -10,15 +14,9 @@ export default class TunnelControls extends EventDispatcher {
     public showMirror: boolean = true;
     public showSpread: boolean = true;
 
-    public spreadConfig = {
-        /**
-         * On each side of the center
-         */
+    public spreadConfig: AbstractTunnelControlsParams = {
         numberOfGrouts: 2,
         spreadDistance: 3,
-        /**
-         * Angle in degrees
-         */
         spreadAngle: 10,
     };
 
@@ -203,5 +201,22 @@ export default class TunnelControls extends EventDispatcher {
         });
 
         this._spread.add(...spreadGrouts);
+    }
+
+    toJSON(): AbstractTunnelControlsParams {
+        const {
+            spreadConfig: { numberOfGrouts, spreadDistance, spreadAngle },
+        } = this;
+        const object: AbstractTunnelControlsParams = {
+            numberOfGrouts,
+            spreadDistance,
+            spreadAngle,
+        };
+        return object;
+    }
+
+    fromJSON(json: AbstractTunnelControlsParams): void {
+        Object.assign(this, json);
+        this.update();
     }
 }
