@@ -145,7 +145,7 @@ export default class Viewer {
 
         this._cameraControls.setPosition(-100, 100, 100);
 
-        const axesHelper = new THREE.AxesHelper(5);
+        const axesHelper = new THREE.AxesHelper(200);
         this._scene.add(axesHelper);
 
         const fit = () => {
