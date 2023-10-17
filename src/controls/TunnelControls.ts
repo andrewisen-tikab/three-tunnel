@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
-import Grout3D from '../Grout3D';
-import Tunnel3D from '../Tunnel3D';
+import Grout3D from '../objects/Grout3D';
+import Tunnel3D from '../objects/Tunnel3D';
 import {
     AbstractGrout3DParams,
     AbstractTunnel3DParams,

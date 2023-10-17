@@ -1,7 +1,11 @@
 import * as THREE from 'three';
-import { AbstractTunnel3D, AbstractTunnel3DParams } from './core';
+import { AbstractObject3D, AbstractTunnel3D, AbstractTunnel3DParams } from '../core';
 
-export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D {
+/**
+ * An extruded tunnel shape with straight walls and an elliptical roof.
+ * The tunnel is centered at the origin and extends along the positive z-axis.
+ */
+export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D, AbstractObject3D {
     public isTunnel3D: boolean = true;
 
     public tunnelLength: number = 50;
@@ -79,5 +83,21 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
     update(): void {
         this.clear();
         this._build();
+    }
+
+    toJSON() {
+        const { tunnelLength, tunnelWidth, tunnelHeight, tunnelRoofHeight, tunnelColorHEX } = this;
+        const object: AbstractTunnel3DParams = {
+            tunnelLength,
+            tunnelWidth,
+            tunnelHeight,
+            tunnelRoofHeight,
+            tunnelColorHEX,
+        };
+        return object;
+    }
+
+    fromJSON(params: AbstractTunnel3D): void {
+        Object.assign(this, params);
     }
 }
