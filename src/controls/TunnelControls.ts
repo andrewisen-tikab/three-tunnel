@@ -190,6 +190,9 @@ export default class TunnelControls extends EventDispatcher {
             spread.position.x = newPosition3D.x;
             spread.position.y = newPosition3D.y;
 
+            const distance = previousGrout.position.distanceTo(spread.position);
+            console.log('distance', distance);
+
             // const newDirection = new THREE.Vector3();
             direction.copy(newPosition3D).sub(previousGrout.position).normalize();
 

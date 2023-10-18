@@ -130,7 +130,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         );
 
         // Interpolate points
-        const interpolatedPoints = this._generateInterpolatedPoints(100);
+        const interpolatedPoints = this._generateInterpolatedPoints(200);
 
         // Convert to local space
         const myPointInLocal = myPointInWorld.clone().sub(offset);
@@ -166,8 +166,6 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         } else if (x == -10 && y == 10) {
             config.topRight = true;
         }
-
-        console.log(x, y);
 
         return { closetsPointInWorld, config };
     }
