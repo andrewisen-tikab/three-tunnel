@@ -218,22 +218,6 @@ export default class Viewer {
             });
 
         groutFolder
-            .add(this.tunnelControls, 'showMirror')
-            .name('Show Mirrored Grouts')
-            .onChange((value: boolean) => {
-                this.tunnelControls.showMirror = value;
-                this.tunnelControls.update();
-            });
-
-        groutFolder
-            .add(this.tunnelControls, 'showSpread')
-            .name('Show Spread Grouts')
-            .onChange((value: boolean) => {
-                this.tunnelControls.showSpread = value;
-                this.tunnelControls.update();
-            });
-
-        groutFolder
             .add(this.tunnelControls.spreadConfig, 'numberOfGrouts', 1, 10, 1)
             .name('Number of Grouts')
             .onChange((value: number) => {

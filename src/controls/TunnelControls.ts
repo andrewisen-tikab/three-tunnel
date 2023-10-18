@@ -11,8 +11,6 @@ import { EventDispatcher } from './EventDispatcher';
 
 export default class TunnelControls extends EventDispatcher {
     public groupGrouts: boolean = true;
-    public showMirror: boolean = true;
-    public showSpread: boolean = true;
 
     public spreadConfig: AbstractTunnelControlsParams = {
         numberOfGrouts: 2,
@@ -97,7 +95,6 @@ export default class TunnelControls extends EventDispatcher {
     }
     private _updateGrouts() {
         this.groupGrouts ? this._updateGroutsAsGroup() : this._updateGroutsIndividually();
-        this._generateMirroredGrouts();
         this._generateSpreadGrouts();
     }
 
@@ -155,52 +152,9 @@ export default class TunnelControls extends EventDispatcher {
     private _generateSpreadGrouts() {
         this._spread.clear();
         if (this._tunnel == null) return;
-        if (this.showSpread === false) return;
 
         const { numberOfGrouts, spreadDistance, spreadAngle } = this.spreadConfig;
-        const spreadGrouts = this._grouts.flatMap((grout) => {
-            const json = grout.toJSON();
-            const grouts: Grout3D[] = [];
-
-            for (let i = 0; i < numberOfGrouts; i++) {
-                for (let j = 0; j < 2; j++) {
-                    const spread = new Grout3D(this._tunnel!);
-                    spread.fromJSON(json);
-                    spread.position.x =
-                        j === 0 ? +spreadDistance * (i + 1) : -spreadDistance * (i + 1);
-                    spread.rotateY(
-                        j === 0
-                            ? +(spreadAngle * THREE.MathUtils.DEG2RAD)
-                            : -(spreadAngle * THREE.MathUtils.DEG2RAD),
-                    );
-                    spread.position.z = grout.position.z;
-
-                    grouts.push(spread);
-
-                    if (this.showMirror == false) continue;
-
-                    const mirror = new Grout3D(this._tunnel!);
-                    mirror.fromJSON(json);
-                    mirror.rotation.x *= -1;
-
-                    mirror.position.x =
-                        j === 0 ? +spreadDistance * (i + 1) : -spreadDistance * (i + 1);
-                    mirror.rotateY(
-                        j === 0
-                            ? +(spreadAngle * THREE.MathUtils.DEG2RAD)
-                            : -(spreadAngle * THREE.MathUtils.DEG2RAD),
-                    );
-
-                    mirror.position.z = grout.position.z;
-                    mirror.position.y = 0;
-                    grouts.push(mirror);
-                }
-            }
-
-            return grouts;
-        });
-
-        this._spread.add(...spreadGrouts);
+        this._tunnel.getShapeDEV();
     }
 
     toJSON(): AbstractTunnelControlsParams {

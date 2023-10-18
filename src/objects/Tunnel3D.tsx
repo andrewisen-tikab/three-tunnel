@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { AbstractObject3D, AbstractTunnel3D, AbstractTunnel3DParams } from '../core';
 
+type Found = {
+    distance: number;
+    index: number;
+};
 /**
  * An extruded tunnel shape with straight walls and an elliptical roof.
  * The tunnel is centered at the origin and extends along the positive z-axis.
@@ -17,10 +21,13 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
     public groutGroup: THREE.Group;
 
+    private _shape: THREE.Shape;
+
     constructor(params?: Partial<AbstractTunnel3DParams>) {
         super();
 
         this.groutGroup = new THREE.Group();
+        this._shape = new THREE.Shape();
 
         if (params) Object.assign(this, params);
         this._build();
@@ -28,6 +35,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
     private _build() {
         const tunnelShape = new THREE.Shape();
+        this._shape = tunnelShape;
 
         const { tunnelWidth, tunnelHeight, tunnelLength, tunnelRoofHeight, tunnelColorHEX } = this;
 
@@ -43,11 +51,20 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         tunnelShape.moveTo(-tunnelWidth / 2, -tunnelHeight / 2); // Bottom-left corner
         tunnelShape.lineTo(tunnelWidth / 2, -tunnelHeight / 2); // Bottom-right corner
         tunnelShape.lineTo(tunnelWidth / 2, tunnelHeight / 2); // Top-right corner
-        tunnelShape.lineTo(-tunnelWidth / 2, tunnelHeight / 2); // Top-left corner
 
         // Add the elliptical roof
-        tunnelShape.moveTo(0, tunnelHeight / 2); // Move to the starting point of the roof
-        tunnelShape.ellipse(0, 0, semiMajorAxis, semiMinorAxis, startAngle, endAngle, false, 0); // Elliptical roof
+        tunnelShape.ellipse(
+            -tunnelWidth / 2,
+            0,
+            semiMajorAxis,
+            semiMinorAxis,
+            startAngle,
+            endAngle,
+            false,
+            0,
+        ); // Elliptical roof
+
+        tunnelShape.lineTo(-tunnelWidth / 2, -tunnelHeight / 2); // Bottom-left corner
 
         // Create the final straight wall
         // Extrude the shape to create the tunnel geometry
@@ -99,5 +116,100 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
     fromJSON(params: AbstractTunnel3D): void {
         Object.assign(this, params);
+    }
+
+    public getShapeDEV() {
+        const { tunnelHeight } = this;
+
+        const myPointInWorld = new THREE.Vector2(10, 0);
+
+        const offset = new THREE.Vector2(
+            0,
+            // +Y is internally offset
+            tunnelHeight / 2,
+        );
+
+        // Interpolate points
+        const interpolatedPoints = this._generateInterpolatedPoints(3);
+
+        // Convert to local space
+        const myPointInLocal = myPointInWorld.clone().sub(offset);
+        const closetsPointInLocal = this._findClosestPoint(interpolatedPoints, myPointInLocal);
+
+        // Convert back
+        const closetsPointInWorld = closetsPointInLocal.clone();
+        closetsPointInWorld.x += offset.x;
+        closetsPointInWorld.y += offset.y;
+
+        // Add debug point
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const cube = new THREE.Mesh(geometry, material);
+        cube.position.set(closetsPointInWorld.x, closetsPointInWorld.y, 0);
+
+        this.add(cube);
+    }
+
+    private _generateInterpolatedPoints(additionalPoints = 100): THREE.Vector2[] {
+        // {x: -10, y: -5}
+        // {x: 10, y: -5}
+        // {x: 10, y: 5}
+        // {x: -10, y: 5}
+        // {x: 0, y: 5}
+        // {x: 10, y: 5}
+        // {x: 9.914448613738104, y: 5.391578576660155}
+        const points = this._shape.getPoints();
+
+        // return points;
+
+        // Interpolate points
+        const interpolatedPoints: THREE.Vector2[] = [];
+
+        for (let i = 0; i < points.length - 1; i++) {
+            const pointA = points[i];
+            const pointB = points[i + 1];
+
+            const distance = pointA.distanceTo(pointB);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _step = distance / additionalPoints;
+
+            for (let j = 0; j < additionalPoints; j++) {
+                const interpolatedPoint = new THREE.Vector2();
+                interpolatedPoint.lerpVectors(pointA, pointB, j / additionalPoints);
+                interpolatedPoints.push(interpolatedPoint);
+
+                // {
+                //     const geometry = new THREE.BoxGeometry(1, 1, 1);
+                //     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                //     const cube = new THREE.Mesh(geometry, material);
+                //     cube.position.set(
+                //         interpolatedPoint.x,
+                //         interpolatedPoint.y + this.tunnelHeight / 2,
+                //         0,
+                //     );
+                //     this.add(cube);
+                // }
+            }
+        }
+        return interpolatedPoints;
+    }
+
+    private _findClosestPoint(points: THREE.Vector2[], myPoint: THREE.Vector2) {
+        const found: Found = {
+            distance: Infinity,
+            index: Infinity,
+        };
+
+        for (let i = 0; i < points.length; i++) {
+            const point = points[i];
+
+            const distance = point.distanceTo(myPoint);
+            if (distance < found.distance) {
+                found.distance = distance;
+                found.index = i;
+            }
+        }
+        const closetsPoint = points[found.index];
+        return closetsPoint;
     }
 }
