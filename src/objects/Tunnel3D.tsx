@@ -118,10 +118,10 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         Object.assign(this, params);
     }
 
-    public getShapeDEV() {
+    public getShapeDEV(myPointInWorld: THREE.Vector2) {
         const { tunnelHeight } = this;
 
-        const myPointInWorld = new THREE.Vector2(10, 0);
+        // const myPointInWorld = new THREE.Vector2(10, 0);
 
         const offset = new THREE.Vector2(
             0,
@@ -130,7 +130,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         );
 
         // Interpolate points
-        const interpolatedPoints = this._generateInterpolatedPoints(3);
+        const interpolatedPoints = this._generateInterpolatedPoints(100);
 
         // Convert to local space
         const myPointInLocal = myPointInWorld.clone().sub(offset);
@@ -142,12 +142,14 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         closetsPointInWorld.y += offset.y;
 
         // Add debug point
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        const cube = new THREE.Mesh(geometry, material);
-        cube.position.set(closetsPointInWorld.x, closetsPointInWorld.y, 0);
+        // const geometry = new THREE.BoxGeometry(1, 1, 1);
+        // const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        // const cube = new THREE.Mesh(geometry, material);
+        // cube.position.set(closetsPointInWorld.x, closetsPointInWorld.y, 0);
 
-        this.add(cube);
+        // this.add(cube);
+
+        return closetsPointInWorld;
     }
 
     private _generateInterpolatedPoints(additionalPoints = 100): THREE.Vector2[] {

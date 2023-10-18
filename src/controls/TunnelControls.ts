@@ -13,7 +13,7 @@ export default class TunnelControls extends EventDispatcher {
     public groupGrouts: boolean = true;
 
     public spreadConfig: AbstractTunnelControlsParams = {
-        numberOfGrouts: 2,
+        numberOfGrouts: 1,
         spreadDistance: 3,
         spreadAngle: 10,
     };
@@ -132,7 +132,6 @@ export default class TunnelControls extends EventDispatcher {
     private _generateMirroredGrouts() {
         this._mirror.clear();
         if (this._tunnel == null) return;
-        if (this.showMirror === false) return;
 
         const mirrorGrouts = this._grouts.map((grout) => {
             const json = grout.toJSON();
@@ -152,9 +151,57 @@ export default class TunnelControls extends EventDispatcher {
     private _generateSpreadGrouts() {
         this._spread.clear();
         if (this._tunnel == null) return;
+        const { tunnelHeight } = this._tunnel;
 
         const { numberOfGrouts, spreadDistance, spreadAngle } = this.spreadConfig;
-        this._tunnel.getShapeDEV();
+
+        let conditionMet = false;
+        let index = 0;
+        let groutIndex = 0;
+        const grout = this._grouts[0];
+
+        const spreads: Grout3D[] = [grout];
+        const center3D = new THREE.Vector3(0, tunnelHeight, 0);
+        const center2D = new THREE.Vector2(0, tunnelHeight);
+
+        const direction = new THREE.Vector3(1, 0, 0);
+
+        while (conditionMet === false) {
+            index++;
+            if (index > 20) conditionMet = true;
+
+            const previousGrout = spreads[groutIndex];
+
+            const json = previousGrout.toJSON();
+            const spread = new Grout3D(this._tunnel!);
+            spread.fromJSON(json);
+            spread.position.copy(previousGrout.position);
+
+            spread.position.add(direction.clone().multiplyScalar(spreadDistance));
+
+            const position2D = new THREE.Vector2(spread.position.x, spread.position.y);
+
+            const newPosition2D = this._tunnel.getShapeDEV(position2D); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
+            const newPosition3D = new THREE.Vector3(newPosition2D.x, newPosition2D.y, 0);
+
+            spread.position.x = newPosition3D.x;
+            spread.position.y = newPosition3D.y;
+
+            // const newDirection = new THREE.Vector3();
+            // newDirection.copy(newPosition3D).sub(previousGrout.position).normalize();
+
+            direction.copy(spread.position).sub(center3D).normalize();
+
+            // direction.copy(newDirection);
+
+            // Calculate new direction from spread's position to newPosition
+
+            spreads.push(spread);
+
+            groutIndex++;
+        }
+
+        this._spread.add(...spreads);
     }
 
     toJSON(): AbstractTunnelControlsParams {
