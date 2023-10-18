@@ -1,10 +1,11 @@
 import * as THREE from 'three';
-import { AbstractGrout3D, AbstractGrout3DParams } from './core';
+import { AbstractGrout3D, AbstractGrout3DParams, AbstractObject3D } from '../core';
 import Tunnel3D from './Tunnel3D';
 
-// const doSomething = () => {};
-
-export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
+/**
+ * A cylindrical grout shape with a circular cross-section.
+ */
+export default class Grout3D extends THREE.Object3D implements AbstractGrout3D, AbstractObject3D {
     public isGrout3D: boolean = true;
 
     public order: number = -1;
@@ -34,28 +35,7 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
         this._build();
     }
 
-    // private _calculateNewParams(): boolean {
-    //     if (!this._params) throw new Error('Grout3D: params is are defined');
-
-    //     const { holeLength, angle, cutDepth } = this._params;
-
-    //     if (angle != null && holeLength != null) {
-    //         doSomething();
-    //     } else if (holeLength != null && cutDepth != null) {
-    //         doSomething();
-    //     } else if (angle != null && cutDepth != null) {
-    //         doSomething();
-    //     } else {
-    //         console.error('params', this._params);
-    //         return false;
-    //     }
-    //     return true;
-    // }
-
     private _build() {
-        // if (!this._calculateNewParams())
-        //     throw new Error('Grout3D: params are not correctly defined');
-
         const { holeLength, groutColorHEX } = this;
 
         const geometry = new THREE.CylinderGeometry(1 / 3, 1 / 3, holeLength, 32);

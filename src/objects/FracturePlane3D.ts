@@ -1,12 +1,21 @@
 import * as THREE from 'three';
-import { AbstractFracturePlane3D, AbstractFracturePlane3DParams } from './core';
+import { AbstractFracturePlane3D, AbstractFracturePlane3DParams, AbstractObject3D } from '../core';
 
-export default class FracturePlane3D extends THREE.Object3D implements AbstractFracturePlane3D {
-    xPosition: number;
-    strike: number;
-    dip: number;
-    opacity: number;
-    planeColorHEX: number;
+export default class FracturePlane3D
+    extends THREE.Object3D
+    implements AbstractFracturePlane3D, AbstractObject3D
+{
+    public isFracturePlane3D: boolean = true;
+
+    public xPosition: number;
+
+    public strike: number;
+
+    public dip: number;
+
+    public opacity: number;
+
+    public planeColorHEX: number;
 
     constructor() {
         super();
