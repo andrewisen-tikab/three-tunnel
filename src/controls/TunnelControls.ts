@@ -166,9 +166,11 @@ export default class TunnelControls extends EventDispatcher {
 
         const direction = new THREE.Vector3(1, 0, 0);
 
+        // this._tunnel.buildTunnelInterpolation();
+
         while (conditionMet === false) {
             index++;
-            if (index > 20) conditionMet = true;
+            if (index > 120) conditionMet = true;
 
             const previousGrout = spreads[groutIndex];
 
@@ -181,16 +183,33 @@ export default class TunnelControls extends EventDispatcher {
 
             const position2D = new THREE.Vector2(spread.position.x, spread.position.y);
 
-            const newPosition2D = this._tunnel.getShapeDEV(position2D); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
+            const { closetsPointInWorld: newPosition2D, config } =
+                this._tunnel.getShapeDEV(position2D); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
             const newPosition3D = new THREE.Vector3(newPosition2D.x, newPosition2D.y, 0);
 
             spread.position.x = newPosition3D.x;
             spread.position.y = newPosition3D.y;
 
             // const newDirection = new THREE.Vector3();
-            // newDirection.copy(newPosition3D).sub(previousGrout.position).normalize();
+            direction.copy(newPosition3D).sub(previousGrout.position).normalize();
 
-            direction.copy(spread.position).sub(center3D).normalize();
+            // direction.copy(spread.position).sub(center3D).normalize();
+
+            const { topLeft, topRight, bottomLeft, bottomRight } = config;
+
+            if (topLeft) {
+                direction.x = 0;
+                direction.y = -1;
+            } else if (bottomLeft) {
+                direction.x = -1;
+                direction.y = 0;
+            } else if (bottomRight) {
+                direction.x = 0;
+                direction.y = 1;
+            } else if (topRight) {
+                direction.x = 1;
+                direction.y = 0;
+            }
 
             // direction.copy(newDirection);
 

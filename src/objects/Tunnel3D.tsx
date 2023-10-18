@@ -149,7 +149,81 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
         // this.add(cube);
 
-        return closetsPointInWorld;
+        const config = {
+            topLeft: false,
+            topRight: false,
+            bottomLeft: false,
+            bottomRight: false,
+        };
+
+        const { x, y } = closetsPointInWorld;
+        if (x == 10 && y == 10) {
+            config.topLeft = true;
+        } else if (x == 10 && y == 0) {
+            config.bottomLeft = true;
+        } else if (x == -10 && y == 0) {
+            config.bottomRight = true;
+        } else if (x == -10 && y == 10) {
+            config.topRight = true;
+        }
+
+        console.log(x, y);
+
+        return { closetsPointInWorld, config };
+    }
+
+    public buildTunnelInterpolation(spanDistance = 3) {
+        const manyPoints = this._shape.getPoints(100);
+
+        let totalDistance = 0;
+        for (let i = 1; i < manyPoints.length; i++) {
+            const prevouisPpoint = manyPoints[i - 1];
+            const currentPoint = manyPoints[i];
+            const distance = prevouisPpoint.distanceTo(currentPoint);
+            totalDistance += distance;
+        }
+
+        const points = this._shape.getPoints(1);
+
+        // return points;
+
+        // Interpolate points
+        const interpolatedPoints: THREE.Vector2[] = [];
+
+        for (let i = 0; i < points.length - 1; i++) {
+            const pointA = points[i];
+            const pointB = points[i + 1];
+
+            // At every spanDistance, add a point
+            const distance = pointA.distanceTo(pointB);
+            let currentDistance = 0;
+
+            while (currentDistance < distance) {
+                const interpolatedPoint = new THREE.Vector2();
+                interpolatedPoint.lerpVectors(pointA, pointB, j / step);
+                interpolatedPoints.push(interpolatedPoint);
+            }
+
+            // const step = distance / spanDistance;
+
+            // for (let j = 0; j < step; j++) {
+            //     const interpolatedPoint = new THREE.Vector2();
+            //     interpolatedPoint.lerpVectors(pointA, pointB, j / step);
+            //     interpolatedPoints.push(interpolatedPoint);
+
+            //     {
+            //         const geometry = new THREE.BoxGeometry(1, 1, 1);
+            //         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+            //         const cube = new THREE.Mesh(geometry, material);
+            //         cube.position.set(
+            //             interpolatedPoint.x,
+            //             interpolatedPoint.y + this.tunnelHeight / 2,
+            //             0,
+            //         );
+            //         this.add(cube);
+            //     }
+            // }
+        }
     }
 
     private _generateInterpolatedPoints(additionalPoints = 100): THREE.Vector2[] {
