@@ -354,7 +354,9 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         }
     }
 
-    public getShapeDEV2(myPointInWorld: THREE.Vector2) {
+    // TODO: Make sure the distance is correct
+    // Iterate till the distance is correct
+    public getShapeDEV2(myPointInWorld: THREE.Vector2, distance = 3) {
         const { tunnelHeight } = this;
 
         // const myPointInWorld = new THREE.Vector2(10, 0);

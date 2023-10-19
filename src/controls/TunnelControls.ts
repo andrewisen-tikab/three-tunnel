@@ -204,34 +204,65 @@ export default class TunnelControls extends EventDispatcher {
             index++;
             if (index > 100) conditionMet = true;
 
+            // Get the previous grout
             const previousGrout = spreads[groutIndex];
 
+            // Setup the new one
             const json = previousGrout.toJSON();
             const spread = new Grout3D(this._tunnel!);
             spread.fromJSON(json);
             spread.position.copy(previousGrout.position);
 
-            spread.position.add(direction.clone().multiplyScalar(spreadDistance));
+            // Spread position
+            const currentSpreadPosition = new THREE.Vector3().copy(spread.position);
+            currentSpreadPosition.y += h; // move towards the spread
+            currentSpreadPosition.z += l; // move towards the spread
 
-            const position2D = new THREE.Vector2(spread.position.x, spread.position.y);
+            // Move the spread position by b=3m in counter clockwise direction
+            const newApproxSpreadPosition3D = new THREE.Vector3().copy(spread.position);
+            newApproxSpreadPosition3D.add(direction.clone().multiplyScalar(spreadDistance));
 
-            const { closetsPointInWorld: newPosition2D } = this._tunnel.getShapeDEV2(position2D); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
-            const newPosition3D = new THREE.Vector3(newPosition2D.x, newPosition2D.y, l);
+            // This will move us very closly to the spread, but we might miss.
+            const newApproxSpreadPosition2D = new THREE.Vector2(
+                newApproxSpreadPosition3D.x,
+                newApproxSpreadPosition3D.y,
+            );
 
-            spread.position.copy(newPosition3D);
+            // TODO: Rewrite this so b=3m
+            const { closetsPointInWorld: newSpreadPosition2D } =
+                this._tunnel.getShapeDEV2(newApproxSpreadPosition2D); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
+            const newSpreadPosition3D = new THREE.Vector3(
+                newSpreadPosition2D.x,
+                newSpreadPosition2D.y,
+                l,
+            );
 
-            const startPos = new THREE.Vector3().copy(newPosition3D);
-            startPos.z -= l;
+            spread.position.copy(newSpreadPosition3D);
+
+            // Let's move back to the our original position
+            const newApproxStartPosition3D = new THREE.Vector3().copy(newSpreadPosition3D);
+            newApproxStartPosition3D.y -= h;
+            newApproxStartPosition3D.z -= l;
+            const newApproxStartPosition2D = new THREE.Vector2(
+                newApproxStartPosition3D.x,
+                newApproxStartPosition3D.y,
+            );
+
             const cubeClone = cube.clone();
 
-            const { closetsPointInWorld: newStartPos, config } =
-                this._tunnel.getShapeDEV(position2D);
-            const newStartPos3 = new THREE.Vector3(newStartPos.x, newStartPos.y, 0);
-            const dummy = new THREE.Vector3(0, 13, 0);
-            cubeClone.position.copy(newStartPos3);
-            spread.lookAt(newStartPos3);
+            const { closetsPointInWorld: newStartPosition2D, config } =
+                this._tunnel.getShapeDEV(newApproxStartPosition2D);
 
-            newStartPos3.z = l;
+            const newStartPosition3D = new THREE.Vector3(
+                newStartPosition2D.x,
+                newStartPosition2D.y,
+                0,
+            );
+            const dummy = new THREE.Vector3(0, 13, 0);
+            cubeClone.position.copy(newStartPosition3D);
+            spread.lookAt(newStartPosition3D);
+
+            // newStartPosition3D.z = l;
 
             // this._spread.add(cubeClone);
 
@@ -251,7 +282,7 @@ export default class TunnelControls extends EventDispatcher {
             console.log('distance', distance);
 
             // const newDirection = new THREE.Vector3();
-            direction.copy(newPosition3D).sub(previousGrout.position).normalize();
+            direction.copy(newSpreadPosition3D).sub(previousGrout.position).normalize();
 
             // direction.copy(spread.position).sub(center3D).normalize();
 
