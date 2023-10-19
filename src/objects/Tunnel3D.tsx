@@ -9,6 +9,7 @@ type Found = {
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geometry, material);
+const debug = new THREE.Group();
 
 /**
  * An extruded tunnel shape with straight walls and an elliptical roof.
@@ -27,6 +28,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
     public groutGroup: THREE.Group;
 
     private _shape: THREE.Shape;
+
     stickInterpolatedPoints: THREE.Vector2[];
 
     constructor(params?: Partial<AbstractTunnel3DParams>) {
@@ -101,6 +103,8 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         this.add(group);
 
         this.add(this.groutGroup);
+
+        this.add(debug);
     }
 
     update(): void {
@@ -300,9 +304,10 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         return closetsPoint;
     }
 
-    public buildStick(stick) {
-        const position = 20;
+    public buildStick(position: number, stick: number) {
+        // const position = 20;
 
+        debug.clear();
         const clone = this._shape.clone();
         const points = clone.getPoints();
 
@@ -345,7 +350,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
             const clone = cube.clone();
             clone.position.set(element.x, element.y + this.tunnelHeight / 2, position);
-            // this.add(clone);
+            debug.add(clone);
         }
     }
 

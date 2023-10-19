@@ -102,7 +102,18 @@ export default class TunnelControls extends EventDispatcher {
     }
     private _updateGrouts() {
         this.groupGrouts ? this._updateGroutsAsGroup() : this._updateGroutsIndividually();
+        this._buildStick();
         this._generateSpreadGrouts();
+    }
+
+    private _buildStick() {
+        if (this._tunnel == null) throw new Error('Tunnel is not attached.');
+        const initialGrout = this._grouts[0];
+        if (initialGrout == null) throw new Error('Grout is not found.');
+
+        const l = Math.cos(initialGrout.angle) * initialGrout.holeLength;
+        const h = Math.sin(initialGrout.angle) * initialGrout.holeLength;
+        this._tunnel.buildStick(l, h);
     }
 
     private _updateGroutsAsGroup() {
@@ -162,9 +173,9 @@ export default class TunnelControls extends EventDispatcher {
 
         const initialGrout = this._grouts[0];
 
+        const l = Math.cos(initialGrout.angle) * initialGrout.holeLength;
         const h = Math.sin(initialGrout.angle) * initialGrout.holeLength;
 
-        this._tunnel.buildStick(h);
         const { numberOfGrouts, spreadDistance, spreadAngle } = this.spreadConfig;
 
         let conditionMet = false;
@@ -205,12 +216,12 @@ export default class TunnelControls extends EventDispatcher {
             const position2D = new THREE.Vector2(spread.position.x, spread.position.y);
 
             const { closetsPointInWorld: newPosition2D } = this._tunnel.getShapeDEV2(position2D); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
-            const newPosition3D = new THREE.Vector3(newPosition2D.x, newPosition2D.y, 20);
+            const newPosition3D = new THREE.Vector3(newPosition2D.x, newPosition2D.y, l);
 
             spread.position.copy(newPosition3D);
 
             const startPos = new THREE.Vector3().copy(newPosition3D);
-            startPos.z -= 20;
+            startPos.z -= l;
             const cubeClone = cube.clone();
 
             const { closetsPointInWorld: newStartPos, config } =
@@ -220,7 +231,7 @@ export default class TunnelControls extends EventDispatcher {
             cubeClone.position.copy(newStartPos3);
             spread.lookAt(newStartPos3);
 
-            newStartPos3.z = 20;
+            newStartPos3.z = l;
 
             // this._spread.add(cubeClone);
 
