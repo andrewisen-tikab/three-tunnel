@@ -162,14 +162,19 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
             bottomRight: false,
         };
 
-        const { x, y } = closetsPointInWorld;
-        if (x == 10 && y == 10) {
+        const { x: x1, y: y1 } = closetsPointInWorld;
+        const x = Math.round(x1);
+        const y = Math.round(y1);
+
+        console.log(x, y);
+
+        if (x === 10 && y === 10) {
             config.topLeft = true;
-        } else if (x == 10 && y == 0) {
+        } else if (x === 10 && y === 0) {
             config.bottomLeft = true;
-        } else if (x == -10 && y == 0) {
+        } else if (x === -10 && y === 0) {
             config.bottomRight = true;
-        } else if (x == -10 && y == 10) {
+        } else if (x === -10 && y === 10) {
             config.topRight = true;
         }
 

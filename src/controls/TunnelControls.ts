@@ -160,9 +160,9 @@ export default class TunnelControls extends EventDispatcher {
         if (this._tunnel == null) return;
         const { tunnelHeight } = this._tunnel;
 
-        const grout = this._grouts[0];
+        const initialGrout = this._grouts[0];
 
-        const h = Math.sin(grout.angle) * grout.holeLength;
+        const h = Math.sin(initialGrout.angle) * initialGrout.holeLength;
 
         this._tunnel.buildStick(h);
         const { numberOfGrouts, spreadDistance, spreadAngle } = this.spreadConfig;
@@ -171,7 +171,7 @@ export default class TunnelControls extends EventDispatcher {
         let index = 0;
         let groutIndex = 0;
 
-        const spreads: Grout3D[] = [grout];
+        const spreads: Grout3D[] = [initialGrout];
         const center3D = new THREE.Vector3(0, tunnelHeight, 0);
         const center2D = new THREE.Vector2(0, tunnelHeight);
 
@@ -179,6 +179,13 @@ export default class TunnelControls extends EventDispatcher {
         const UC = new THREE.Vector3().copy(center3D).add(up);
 
         const direction = new THREE.Vector3(1, 0, 0);
+
+        const cachedConfig = {
+            topLeft: false,
+            topRight: false,
+            bottomLeft: false,
+            bottomRight: false,
+        };
 
         // this._tunnel.buildTunnelInterpolation();
 
@@ -197,8 +204,7 @@ export default class TunnelControls extends EventDispatcher {
 
             const position2D = new THREE.Vector2(spread.position.x, spread.position.y);
 
-            const { closetsPointInWorld: newPosition2D, config } =
-                this._tunnel.getShapeDEV2(position2D); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
+            const { closetsPointInWorld: newPosition2D } = this._tunnel.getShapeDEV2(position2D); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
             const newPosition3D = new THREE.Vector3(newPosition2D.x, newPosition2D.y, 20);
 
             spread.position.copy(newPosition3D);
@@ -207,11 +213,14 @@ export default class TunnelControls extends EventDispatcher {
             startPos.z -= 20;
             const cubeClone = cube.clone();
 
-            const { closetsPointInWorld: newStartPos } = this._tunnel.getShapeDEV(position2D);
+            const { closetsPointInWorld: newStartPos, config } =
+                this._tunnel.getShapeDEV(position2D);
             const newStartPos3 = new THREE.Vector3(newStartPos.x, newStartPos.y, 0);
             const dummy = new THREE.Vector3(0, 13, 0);
             cubeClone.position.copy(newStartPos3);
             spread.lookAt(newStartPos3);
+
+            newStartPos3.z = 20;
 
             // this._spread.add(cubeClone);
 
@@ -228,6 +237,8 @@ export default class TunnelControls extends EventDispatcher {
 
             const distance = previousGrout.position.distanceTo(spread.position);
 
+            console.log('distance', distance);
+
             // const newDirection = new THREE.Vector3();
             direction.copy(newPosition3D).sub(previousGrout.position).normalize();
 
@@ -236,15 +247,19 @@ export default class TunnelControls extends EventDispatcher {
             const { topLeft, topRight, bottomLeft, bottomRight } = config;
 
             if (topLeft) {
+                cachedConfig.topLeft = true;
                 direction.x = 0;
                 direction.y = -1;
             } else if (bottomLeft) {
+                cachedConfig.bottomLeft = true;
                 direction.x = -1;
                 direction.y = 0;
             } else if (bottomRight) {
+                cachedConfig.bottomRight = true;
                 direction.x = 0;
                 direction.y = 1;
             } else if (topRight) {
+                cachedConfig.topRight = true;
                 direction.x = 1;
                 direction.y = 0;
             }
@@ -256,6 +271,16 @@ export default class TunnelControls extends EventDispatcher {
             spreads.push(spread);
 
             groutIndex++;
+
+            if (
+                cachedConfig.topLeft &&
+                cachedConfig.bottomLeft &&
+                cachedConfig.bottomRight &&
+                cachedConfig.topRight
+            ) {
+                const distance = initialGrout.position.distanceTo(spread.position);
+                if (distance < spreadDistance) conditionMet = true;
+            }
         }
 
         this._spread.add(...spreads);
