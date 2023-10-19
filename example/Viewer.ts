@@ -123,7 +123,7 @@ export default class Viewer {
         this.tunnelControls.attach(this._tunnel);
 
         this._grout1 = this.tunnelControls.addGrout();
-        this._grout2 = this.tunnelControls.addGrout();
+        // this._grout2 = this.tunnelControls.addGrout();
         this.tunnelControls.update();
 
         const size = 200;

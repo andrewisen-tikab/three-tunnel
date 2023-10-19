@@ -73,6 +73,7 @@ export type AbstractGrout3D = {
     holeLength: number;
     /**
      * Angle parallel to the tunnel (+Z) and up towards the ground (+Y).
+     * In radians.
      */
     angle: number;
     /**

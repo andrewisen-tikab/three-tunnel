@@ -5,6 +5,11 @@ type Found = {
     distance: number;
     index: number;
 };
+
+const geometry = new THREE.BoxGeometry(1, 1, 1);
+const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const cube = new THREE.Mesh(geometry, material);
+
 /**
  * An extruded tunnel shape with straight walls and an elliptical roof.
  * The tunnel is centered at the origin and extends along the positive z-axis.
@@ -22,6 +27,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
     public groutGroup: THREE.Group;
 
     private _shape: THREE.Shape;
+    stickInterpolatedPoints: THREE.Vector2[];
 
     constructor(params?: Partial<AbstractTunnel3DParams>) {
         super();
@@ -224,7 +230,10 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         }
     }
 
-    private _generateInterpolatedPoints(additionalPoints = 100): THREE.Vector2[] {
+    private _generateInterpolatedPoints(
+        additionalPoints = 100,
+        points = this._shape.getPoints(),
+    ): THREE.Vector2[] {
         // {x: -10, y: -5}
         // {x: 10, y: -5}
         // {x: 10, y: 5}
@@ -232,7 +241,6 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         // {x: 0, y: 5}
         // {x: 10, y: 5}
         // {x: 9.914448613738104, y: 5.391578576660155}
-        const points = this._shape.getPoints();
 
         // return points;
 
@@ -285,5 +293,106 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         }
         const closetsPoint = points[found.index];
         return closetsPoint;
+    }
+
+    public buildStick(stick) {
+        const position = 20;
+
+        const clone = this._shape.clone();
+        const points = clone.getPoints();
+
+        // return points;
+
+        // Interpolate points
+        const xs = [];
+        const ys = [];
+        for (let i = 0; i < points.length - 1; i++) {
+            const pointA = points[i];
+
+            xs.push(pointA.x);
+            ys.push(pointA.y);
+        }
+
+        const center = new THREE.Vector2();
+        center.set(
+            xs.reduce((a, b) => a + b, 0) / xs.length,
+            ys.reduce((a, b) => a + b, 0) / ys.length,
+        );
+
+        const newPoints = [];
+
+        for (let i = 0; i < points.length; i++) {
+            const pointA = points[i];
+            const direction = new THREE.Vector2();
+            direction.subVectors(pointA, center).normalize();
+
+            const pointB = pointA.clone().add(direction.multiplyScalar(stick));
+
+            newPoints.push(pointB);
+        }
+
+        // const interpolatedPoints = this._generateInterpolatedPoints(100, newPoints);
+        const stickInterpolatedPoints = this._generateInterpolatedPoints(100, newPoints);
+        this.stickInterpolatedPoints = stickInterpolatedPoints;
+
+        for (let i = 0; i < stickInterpolatedPoints.length; i++) {
+            const element = stickInterpolatedPoints[i];
+
+            const clone = cube.clone();
+            clone.position.set(element.x, element.y + this.tunnelHeight / 2, position);
+            // this.add(clone);
+        }
+    }
+
+    public getShapeDEV2(myPointInWorld: THREE.Vector2) {
+        const { tunnelHeight } = this;
+
+        // const myPointInWorld = new THREE.Vector2(10, 0);
+
+        const offset = new THREE.Vector2(
+            0,
+            // +Y is internally offset
+            tunnelHeight / 2,
+        );
+
+        // Interpolate points
+        const interpolatedPoints = this.stickInterpolatedPoints;
+
+        // Convert to local space
+        const myPointInLocal = myPointInWorld.clone().sub(offset);
+        const closetsPointInLocal = this._findClosestPoint(interpolatedPoints, myPointInLocal);
+
+        // Convert back
+        const closetsPointInWorld = closetsPointInLocal.clone();
+        closetsPointInWorld.x += offset.x;
+        closetsPointInWorld.y += offset.y;
+
+        // Add debug point
+        // const geometry = new THREE.BoxGeometry(1, 1, 1);
+        // const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        // const cube = new THREE.Mesh(geometry, material);
+        // cube.position.set(closetsPointInWorld.x, closetsPointInWorld.y, 0);
+
+        // this.add(cube);
+
+        const config = {
+            topLeft: false,
+            topRight: false,
+            bottomLeft: false,
+            bottomRight: false,
+        };
+
+        const { x, y } = closetsPointInWorld;
+        if (x == 10 && y == 10) {
+            config.topLeft = true;
+        } else if (x == 10 && y == 0) {
+            config.bottomLeft = true;
+        } else if (x == -10 && y == 0) {
+            config.bottomRight = true;
+        } else if (x == -10 && y == 10) {
+            config.topRight = true;
+        }
+
+        return { closetsPointInWorld, config };
     }
 }
