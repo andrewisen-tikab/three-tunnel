@@ -1,5 +1,10 @@
 import * as THREE from 'three';
+import SpriteText from 'three-spritetext';
+
 import { AbstractObject3D, AbstractTunnel3D, AbstractTunnel3DParams } from '../core';
+
+import ClipperLib from '@doodle3d/clipper-lib';
+import Shape from '@doodle3d/clipper-js';
 
 type Found = {
     distance: number;
@@ -56,8 +61,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         const endAngle = Math.PI;
 
         // Create the straight walls
-        tunnelShape.moveTo(-tunnelWidth / 2, -tunnelHeight / 2); // Bottom-left corner
-        tunnelShape.lineTo(tunnelWidth / 2, -tunnelHeight / 2); // Bottom-right corner
+        tunnelShape.moveTo(tunnelWidth / 2, -tunnelHeight / 2); // Bottom-right corner
         tunnelShape.lineTo(tunnelWidth / 2, tunnelHeight / 2); // Top-right corner
 
         // Add the elliptical roof
@@ -310,36 +314,86 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         debug.clear();
         const clone = this._shape.clone();
         const points = clone.getPoints();
+        this.stickInterpolatedPoints = points;
 
-        // return points;
+        points.forEach((point, index) => {
+            const clone = cube.clone();
+            clone.position.set(point.x, point.y + this.tunnelHeight / 2, position);
 
-        // Interpolate points
-        const xs = [];
-        const ys = [];
-        for (let i = 0; i < points.length - 1; i++) {
-            const pointA = points[i];
+            // clone.material.color.addScalar(1)
+            const myText = new SpriteText(`${index}`, 1, 'blue');
+            myText.position.set(point.x, point.y + this.tunnelHeight / 2, -1);
 
-            xs.push(pointA.x);
-            ys.push(pointA.y);
-        }
+            myText.material.depthTest = false;
+            myText.renderOrder = 1;
+            debug.add(myText);
+        });
 
-        const center = new THREE.Vector2();
-        center.set(
-            xs.reduce((a, b) => a + b, 0) / xs.length,
-            ys.reduce((a, b) => a + b, 0) / ys.length,
-        );
+        const originalPaths = [
+            points.map((point) => {
+                return { X: point.x, Y: point.y };
+            }),
+        ];
 
-        const newPoints = [];
+        const clipper = new ClipperLib.Clipper();
+        const clipperOffset = new ClipperLib.ClipperOffset();
 
-        for (let i = 0; i < points.length; i++) {
-            const pointA = points[i];
-            const direction = new THREE.Vector2();
-            direction.subVectors(pointA, center).normalize();
+        // const result = new ClipperLib.Paths();
 
-            const pointB = pointA.clone().add(direction.multiplyScalar(stick));
+        // TEST 1
+        // clipperOffset.AddPaths(originalPaths);
+        // clipperOffset.Execute(result, 20);
 
-            newPoints.push(pointB);
-        }
+        // clipper.AddPaths(originalPaths, ClipperLib.PolyType.ptSubject, true);
+        // clipper.Execute(ClipperLib.ClipType.ctOffset, result);
+
+        const subject = new Shape(originalPaths, true);
+        const result = subject.offset(stick);
+
+        const newPoints = result.paths[0].map((point) => {
+            return new THREE.Vector2(point.X, point.Y);
+        });
+
+        newPoints.forEach((point) => {
+            const clone = cube.clone();
+            clone.position.set(point.x, point.y + this.tunnelHeight / 2, position);
+            debug.add(clone);
+        });
+
+        // return;
+
+        // // return points;
+
+        // // Interpolate points
+        // const xs = [];
+        // const ys = [];
+        // for (let i = 0; i < points.length - 1; i++) {
+        //     const pointA = points[i];
+
+        //     xs.push(pointA.x);
+        //     ys.push(pointA.y);
+        // }
+
+        // const center = new THREE.Vector2();
+        // center.set(
+        //     xs.reduce((a, b) => a + b, 0) / xs.length,
+        //     ys.reduce((a, b) => a + b, 0) / ys.length,
+        // );
+
+        // const newPoints = [];
+
+        // for (let i = 0; i < points.length; i++) {
+        //     const pointA = points[i];
+        //     const direction = new THREE.Vector2();
+        //     direction.subVectors(pointA, center).normalize();
+
+        //     // const pointB = pointA.clone().add(direction.multiplyScalar(stick));
+        //     const pointB = pointA.clone();
+        //     pointB.x += stick;
+        //     pointB.y += stick;
+
+        //     newPoints.push(pointB);
+        // }
 
         // const interpolatedPoints = this._generateInterpolatedPoints(100, newPoints);
         const stickInterpolatedPoints = this._generateInterpolatedPoints(200, newPoints);
@@ -409,7 +463,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
             }
         }
 
-        console.log(distanceBetweenPoints, whileIndex);
+        // console.log(distanceBetweenPoints, whileIndex);
 
         // Add debug point
         // const geometry = new THREE.BoxGeometry(1, 1, 1);

@@ -202,7 +202,7 @@ export default class TunnelControls extends EventDispatcher {
 
         while (conditionMet === false) {
             index++;
-            if (index > 20) conditionMet = true;
+            if (index > 200) conditionMet = true;
 
             // Get the previous grout
             const previousGrout = spreads[groutIndex];
