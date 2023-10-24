@@ -140,7 +140,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         );
 
         // Interpolate points
-        const interpolatedPoints = this._generateInterpolatedPoints(200);
+        const interpolatedPoints = this._generateInterpolatedPoints(1_000);
 
         // Convert to local space
         const myPointInLocal = myPointInWorld.clone().sub(offset);
@@ -170,7 +170,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         const x = Math.round(x1);
         const y = Math.round(y1);
 
-        console.log(x, y);
+        // console.log(x, y);
 
         if (x === 10 && y === 10) {
             config.topLeft = true;
@@ -342,7 +342,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         }
 
         // const interpolatedPoints = this._generateInterpolatedPoints(100, newPoints);
-        const stickInterpolatedPoints = this._generateInterpolatedPoints(100, newPoints);
+        const stickInterpolatedPoints = this._generateInterpolatedPoints(200, newPoints);
         this.stickInterpolatedPoints = stickInterpolatedPoints;
 
         for (let i = 0; i < stickInterpolatedPoints.length; i++) {
@@ -356,10 +356,14 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
     // TODO: Make sure the distance is correct
     // Iterate till the distance is correct
-    public getShapeDEV2(myPointInWorld: THREE.Vector2, distance = 3) {
+    public getShapeDEV2(
+        newPoint: THREE.Vector2,
+        oldPoint: THREE.Vector2,
+        direction: THREE.Vector2,
+        distance = 3,
+        tolerance = 0.1,
+    ) {
         const { tunnelHeight } = this;
-
-        // const myPointInWorld = new THREE.Vector2(10, 0);
 
         const offset = new THREE.Vector2(
             0,
@@ -370,14 +374,42 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         // Interpolate points
         const interpolatedPoints = this.stickInterpolatedPoints;
 
-        // Convert to local space
-        const myPointInLocal = myPointInWorld.clone().sub(offset);
-        const closetsPointInLocal = this._findClosestPoint(interpolatedPoints, myPointInLocal);
+        let distanceBetweenPoints = Infinity;
 
-        // Convert back
-        const closetsPointInWorld = closetsPointInLocal.clone();
-        closetsPointInWorld.x += offset.x;
-        closetsPointInWorld.y += offset.y;
+        let closetsPointInWorld = new THREE.Vector2();
+        let conditionMet = false;
+        let whileIndex = 0;
+        while (conditionMet === false) {
+            whileIndex++;
+            if (whileIndex > 1_000) conditionMet = true;
+
+            // Convert to local space
+            const myPointInLocal = newPoint.clone().sub(offset);
+            const closetsPointInLocal = this._findClosestPoint(interpolatedPoints, myPointInLocal);
+
+            // Convert back
+            closetsPointInWorld = closetsPointInLocal.clone();
+            closetsPointInWorld.x += offset.x;
+            closetsPointInWorld.y += offset.y;
+
+            // Check distance, e.g 2.7
+            distanceBetweenPoints = oldPoint.distanceTo(closetsPointInWorld);
+
+            // 2.7 < 3 - 0.1 = 2.9
+            if (distanceBetweenPoints < distance - tolerance) {
+                newPoint.add(direction.clone().multiplyScalar(tolerance));
+                // console.log('too close');
+            } else if (distanceBetweenPoints > distance + tolerance) {
+                newPoint.add(direction.clone().multiplyScalar(-tolerance));
+                // console.log('too far');
+            } else {
+                // console.log(distanceBetweenPoints);
+                conditionMet = true;
+                // console.log('just right');
+            }
+        }
+
+        console.log(distanceBetweenPoints, whileIndex);
 
         // Add debug point
         // const geometry = new THREE.BoxGeometry(1, 1, 1);

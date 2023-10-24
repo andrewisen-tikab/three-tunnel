@@ -202,7 +202,7 @@ export default class TunnelControls extends EventDispatcher {
 
         while (conditionMet === false) {
             index++;
-            if (index > 100) conditionMet = true;
+            if (index > 20) conditionMet = true;
 
             // Get the previous grout
             const previousGrout = spreads[groutIndex];
@@ -218,9 +218,16 @@ export default class TunnelControls extends EventDispatcher {
             currentSpreadPosition.y += h; // move towards the spread
             currentSpreadPosition.z += l; // move towards the spread
 
+            const currentSpreadPosition2D = new THREE.Vector2(
+                currentSpreadPosition.x,
+                currentSpreadPosition.y,
+            );
+
             // Move the spread position by b=3m in counter clockwise direction
             const newApproxSpreadPosition3D = new THREE.Vector3().copy(spread.position);
             newApproxSpreadPosition3D.add(direction.clone().multiplyScalar(spreadDistance));
+
+            const direction2D = new THREE.Vector2(direction.x, direction.y);
 
             // This will move us very closly to the spread, but we might miss.
             const newApproxSpreadPosition2D = new THREE.Vector2(
@@ -229,8 +236,11 @@ export default class TunnelControls extends EventDispatcher {
             );
 
             // TODO: Rewrite this so b=3m
-            const { closetsPointInWorld: newSpreadPosition2D } =
-                this._tunnel.getShapeDEV2(newApproxSpreadPosition2D); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
+            const { closetsPointInWorld: newSpreadPosition2D } = this._tunnel.getShapeDEV2(
+                newApproxSpreadPosition2D,
+                currentSpreadPosition2D,
+                direction2D,
+            ); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
             const newSpreadPosition3D = new THREE.Vector3(
                 newSpreadPosition2D.x,
                 newSpreadPosition2D.y,
@@ -279,7 +289,7 @@ export default class TunnelControls extends EventDispatcher {
 
             const distance = previousGrout.position.distanceTo(spread.position);
 
-            console.log('distance', distance);
+            // console.log('distance', distance);
 
             // const newDirection = new THREE.Vector3();
             direction.copy(newSpreadPosition3D).sub(previousGrout.position).normalize();
