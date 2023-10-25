@@ -176,6 +176,9 @@ export default class TunnelControls extends EventDispatcher {
         const l = Math.cos(initialGrout.angle) * initialGrout.holeLength;
         const h = Math.sin(initialGrout.angle) * initialGrout.holeLength;
 
+        initialGrout.position.y += h; // move towards the spread
+        initialGrout.position.z += l; // move towards the spread
+
         const { numberOfGrouts, spreadDistance, spreadAngle } = this.spreadConfig;
 
         let conditionMet = false;
@@ -202,7 +205,10 @@ export default class TunnelControls extends EventDispatcher {
 
         while (conditionMet === false) {
             index++;
-            if (index > 200) conditionMet = true;
+            if (index > 20) {
+                conditionMet = true;
+                break;
+            }
 
             // Get the previous grout
             const previousGrout = spreads[groutIndex];
@@ -215,8 +221,6 @@ export default class TunnelControls extends EventDispatcher {
 
             // Spread position
             const currentSpreadPosition = new THREE.Vector3().copy(spread.position);
-            currentSpreadPosition.y += h; // move towards the spread
-            currentSpreadPosition.z += l; // move towards the spread
 
             const currentSpreadPosition2D = new THREE.Vector2(
                 currentSpreadPosition.x,
@@ -225,52 +229,73 @@ export default class TunnelControls extends EventDispatcher {
 
             // Move the spread position by b=3m in counter clockwise direction
             const newApproxSpreadPosition3D = new THREE.Vector3().copy(spread.position);
-            newApproxSpreadPosition3D.add(direction.clone().multiplyScalar(spreadDistance));
 
-            const direction2D = new THREE.Vector2(direction.x, direction.y);
+            console.log('LOOK', currentSpreadPosition2D.x, currentSpreadPosition2D.y);
 
-            // This will move us very closly to the spread, but we might miss.
-            const newApproxSpreadPosition2D = new THREE.Vector2(
-                newApproxSpreadPosition3D.x,
-                newApproxSpreadPosition3D.y,
-            );
-
-            // TODO: Rewrite this so b=3m
-            const { closetsPointInWorld: newSpreadPosition2D } = this._tunnel.getShapeDEV2(
-                newApproxSpreadPosition2D,
-                currentSpreadPosition2D,
-                direction2D,
-            ); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
-            const newSpreadPosition3D = new THREE.Vector3(
-                newSpreadPosition2D.x,
-                newSpreadPosition2D.y,
+            this._tunnel.mockDoStick(
+                spread,
+                h,
                 l,
+                new THREE.Vector2(currentSpreadPosition2D.x, currentSpreadPosition2D.y),
             );
 
-            spread.position.copy(newSpreadPosition3D);
+            // const newMockStickPosition = this._tunnel.mockGetStick(
+            //     new THREE.Vector2(currentSpreadPosition2D.x, currentSpreadPosition2D.y),
+            // );
+            // if (newMockStickPosition == null) throw new Error('Stick is not found.');
+            // // newApproxSpreadPosition3D.add(direction.clone().multiplyScalar(spreadDistance));
 
-            // Let's move back to the our original position
-            const newApproxStartPosition3D = new THREE.Vector3().copy(newSpreadPosition3D);
-            newApproxStartPosition3D.y -= h;
-            newApproxStartPosition3D.z -= l;
-            const newApproxStartPosition2D = new THREE.Vector2(
-                newApproxStartPosition3D.x,
-                newApproxStartPosition3D.y,
-            );
+            // // const direction2D = new THREE.Vector2(direction.x, direction.y);
 
-            const cubeClone = cube.clone();
+            // spread.position.x = newMockStickPosition.point.x;
+            // spread.position.y = newMockStickPosition.point.y;
+            // spread.position.z = l;
 
-            const { closetsPointInWorld: newStartPosition2D, config } =
-                this._tunnel.getShapeDEV(newApproxStartPosition2D);
+            spreads.push(spread);
+            groutIndex++;
 
-            const newStartPosition3D = new THREE.Vector3(
-                newStartPosition2D.x,
-                newStartPosition2D.y,
-                0,
-            );
-            const dummy = new THREE.Vector3(0, 13, 0);
-            cubeClone.position.copy(newStartPosition3D);
-            spread.lookAt(newStartPosition3D);
+            // // This will move us very closly to the spread, but we might miss.
+            // const newApproxSpreadPosition2D = new THREE.Vector2(
+            //     newApproxSpreadPosition3D.x,
+            //     newApproxSpreadPosition3D.y,
+            // );
+
+            // // TODO: Rewrite this so b=3m
+            // const { closetsPointInWorld: newSpreadPosition2D } = this._tunnel.getShapeDEV2(
+            //     newApproxSpreadPosition2D,
+            //     currentSpreadPosition2D,
+            //     direction2D,
+            // ); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
+            // const newSpreadPosition3D = new THREE.Vector3(
+            //     newSpreadPosition2D.x,
+            //     newSpreadPosition2D.y,
+            //     l,
+            // );
+
+            // spread.position.copy(newSpreadPosition3D);
+
+            // // Let's move back to the our original position
+            // const newApproxStartPosition3D = new THREE.Vector3().copy(newSpreadPosition3D);
+            // newApproxStartPosition3D.y -= h;
+            // newApproxStartPosition3D.z -= l;
+            // const newApproxStartPosition2D = new THREE.Vector2(
+            //     newApproxStartPosition3D.x,
+            //     newApproxStartPosition3D.y,
+            // );
+
+            // const cubeClone = cube.clone();
+
+            // const { closetsPointInWorld: newStartPosition2D, config } =
+            //     this._tunnel.getShapeDEV(newApproxStartPosition2D);
+
+            // const newStartPosition3D = new THREE.Vector3(
+            //     newStartPosition2D.x,
+            //     newStartPosition2D.y,
+            //     0,
+            // );
+            // const dummy = new THREE.Vector3(0, 13, 0);
+            // cubeClone.position.copy(newStartPosition3D);
+            // spread.lookAt(newStartPosition3D);
 
             // newStartPosition3D.z = l;
 
@@ -291,48 +316,48 @@ export default class TunnelControls extends EventDispatcher {
 
             // console.log('distance', distance);
 
-            // const newDirection = new THREE.Vector3();
-            direction.copy(newSpreadPosition3D).sub(previousGrout.position).normalize();
+            // // const newDirection = new THREE.Vector3();
+            // direction.copy(newSpreadPosition3D).sub(previousGrout.position).normalize();
 
-            // direction.copy(spread.position).sub(center3D).normalize();
+            // // direction.copy(spread.position).sub(center3D).normalize();
 
-            const { topLeft, topRight, bottomLeft, bottomRight } = config;
+            // const { topLeft, topRight, bottomLeft, bottomRight } = config;
 
-            if (topLeft) {
-                cachedConfig.topLeft = true;
-                direction.x = 0;
-                direction.y = -1;
-            } else if (bottomLeft) {
-                cachedConfig.bottomLeft = true;
-                direction.x = -1;
-                direction.y = 0;
-            } else if (bottomRight) {
-                cachedConfig.bottomRight = true;
-                direction.x = 0;
-                direction.y = 1;
-            } else if (topRight) {
-                cachedConfig.topRight = true;
-                direction.x = 1;
-                direction.y = 0;
-            }
+            // if (topLeft) {
+            //     cachedConfig.topLeft = true;
+            //     direction.x = 0;
+            //     direction.y = -1;
+            // } else if (bottomLeft) {
+            //     cachedConfig.bottomLeft = true;
+            //     direction.x = -1;
+            //     direction.y = 0;
+            // } else if (bottomRight) {
+            //     cachedConfig.bottomRight = true;
+            //     direction.x = 0;
+            //     direction.y = 1;
+            // } else if (topRight) {
+            //     cachedConfig.topRight = true;
+            //     direction.x = 1;
+            //     direction.y = 0;
+            // }
 
-            // direction.copy(newDirection);
+            // // direction.copy(newDirection);
 
-            // Calculate new direction from spread's position to newPosition
+            // // Calculate new direction from spread's position to newPosition
 
-            spreads.push(spread);
+            // spreads.push(spread);
 
-            groutIndex++;
+            // groutIndex++;
 
-            if (
-                cachedConfig.topLeft &&
-                cachedConfig.bottomLeft &&
-                cachedConfig.bottomRight &&
-                cachedConfig.topRight
-            ) {
-                const distance = initialGrout.position.distanceTo(spread.position);
-                if (distance < spreadDistance) conditionMet = true;
-            }
+            // if (
+            //     cachedConfig.topLeft &&
+            //     cachedConfig.bottomLeft &&
+            //     cachedConfig.bottomRight &&
+            //     cachedConfig.topRight
+            // ) {
+            //     const distance = initialGrout.position.distanceTo(spread.position);
+            //     if (distance < spreadDistance) conditionMet = true;
+            // }
         }
 
         this._spread.add(...spreads);
