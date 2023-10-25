@@ -12,7 +12,7 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D, 
 
     public screenLength: number = 1;
 
-    public angle: number = 5 * THREE.MathUtils.DEG2RAD;
+    public angle: number = 15 * THREE.MathUtils.DEG2RAD;
 
     public cutDepth: number = 1;
 

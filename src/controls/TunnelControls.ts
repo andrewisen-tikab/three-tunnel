@@ -167,45 +167,34 @@ export default class TunnelControls extends EventDispatcher {
     }
 
     private _generateSpreadGrouts() {
+        // Clear any previous spread
         this._spread.clear();
         if (this._tunnel == null) return;
-        const { tunnelHeight } = this._tunnel;
 
+        // The spread is only used for calculations and is not visible
         const initialGrout = this._grouts[0];
+        initialGrout.visible = false;
 
+        // Calculate some maths
+        const { tunnelHeight } = this._tunnel;
         const l = Math.cos(initialGrout.angle) * initialGrout.holeLength;
         const h = Math.sin(initialGrout.angle) * initialGrout.holeLength;
 
-        initialGrout.position.y += h; // move towards the spread
+        // Set the grout's position to the end (!) of the hole
+        initialGrout.position.y += h;
         initialGrout.position.z += l; // move towards the spread
 
-        const { numberOfGrouts, spreadDistance, spreadAngle } = this.spreadConfig;
-
+        // Setup iteration
         let conditionMet = false;
-        let index = 0;
-        let groutIndex = 0;
+        let whileIndex = 0; // Keep track of iterations
+        let groutIndex = 0; // Keep track of grout used
 
         const spreads: Grout3D[] = [initialGrout];
-        const center3D = new THREE.Vector3(0, tunnelHeight, 0);
-        const center2D = new THREE.Vector2(0, tunnelHeight);
-
-        const up = new THREE.Vector3(0, 1, 0);
-        const UC = new THREE.Vector3().copy(center3D).add(up);
-
-        const direction = new THREE.Vector3(1, 0, 0);
-
-        const cachedConfig = {
-            topLeft: false,
-            topRight: false,
-            bottomLeft: false,
-            bottomRight: false,
-        };
-
-        // this._tunnel.buildTunnelInterpolation();
 
         while (conditionMet === false) {
-            index++;
-            if (index > 20) {
+            // Safety check
+            whileIndex++;
+            if (whileIndex > 30) {
                 conditionMet = true;
                 break;
             }
@@ -219,18 +208,12 @@ export default class TunnelControls extends EventDispatcher {
             spread.fromJSON(json);
             spread.position.copy(previousGrout.position);
 
-            // Spread position
+            // Set the new grout's position to the end (!) of the hole
             const currentSpreadPosition = new THREE.Vector3().copy(spread.position);
-
             const currentSpreadPosition2D = new THREE.Vector2(
                 currentSpreadPosition.x,
                 currentSpreadPosition.y,
             );
-
-            // Move the spread position by b=3m in counter clockwise direction
-            const newApproxSpreadPosition3D = new THREE.Vector3().copy(spread.position);
-
-            console.log('LOOK', currentSpreadPosition2D.x, currentSpreadPosition2D.y);
 
             this._tunnel.mockDoStick(
                 spread,
@@ -239,125 +222,21 @@ export default class TunnelControls extends EventDispatcher {
                 new THREE.Vector2(currentSpreadPosition2D.x, currentSpreadPosition2D.y),
             );
 
-            // const newMockStickPosition = this._tunnel.mockGetStick(
-            //     new THREE.Vector2(currentSpreadPosition2D.x, currentSpreadPosition2D.y),
-            // );
-            // if (newMockStickPosition == null) throw new Error('Stick is not found.');
-            // // newApproxSpreadPosition3D.add(direction.clone().multiplyScalar(spreadDistance));
-
-            // // const direction2D = new THREE.Vector2(direction.x, direction.y);
-
-            // spread.position.x = newMockStickPosition.point.x;
-            // spread.position.y = newMockStickPosition.point.y;
-            // spread.position.z = l;
+            // Check if we need to stop
+            if (
+                // Wait for the loop to do its thing
+                whileIndex > 5 &&
+                // Make sure it's over the tunnel's ""
+                spread.position.y > tunnelHeight &&
+                // N:B. X coordinate is world coordinate, not tunnel coordinate!
+                spread.position.x < 0
+            ) {
+                conditionMet = true;
+                break;
+            }
 
             spreads.push(spread);
             groutIndex++;
-
-            // // This will move us very closly to the spread, but we might miss.
-            // const newApproxSpreadPosition2D = new THREE.Vector2(
-            //     newApproxSpreadPosition3D.x,
-            //     newApproxSpreadPosition3D.y,
-            // );
-
-            // // TODO: Rewrite this so b=3m
-            // const { closetsPointInWorld: newSpreadPosition2D } = this._tunnel.getShapeDEV2(
-            //     newApproxSpreadPosition2D,
-            //     currentSpreadPosition2D,
-            //     direction2D,
-            // ); // console.log('position2D', position2D, 'newPosition2D', newPosition2D);
-            // const newSpreadPosition3D = new THREE.Vector3(
-            //     newSpreadPosition2D.x,
-            //     newSpreadPosition2D.y,
-            //     l,
-            // );
-
-            // spread.position.copy(newSpreadPosition3D);
-
-            // // Let's move back to the our original position
-            // const newApproxStartPosition3D = new THREE.Vector3().copy(newSpreadPosition3D);
-            // newApproxStartPosition3D.y -= h;
-            // newApproxStartPosition3D.z -= l;
-            // const newApproxStartPosition2D = new THREE.Vector2(
-            //     newApproxStartPosition3D.x,
-            //     newApproxStartPosition3D.y,
-            // );
-
-            // const cubeClone = cube.clone();
-
-            // const { closetsPointInWorld: newStartPosition2D, config } =
-            //     this._tunnel.getShapeDEV(newApproxStartPosition2D);
-
-            // const newStartPosition3D = new THREE.Vector3(
-            //     newStartPosition2D.x,
-            //     newStartPosition2D.y,
-            //     0,
-            // );
-            // const dummy = new THREE.Vector3(0, 13, 0);
-            // cubeClone.position.copy(newStartPosition3D);
-            // spread.lookAt(newStartPosition3D);
-
-            // newStartPosition3D.z = l;
-
-            // this._spread.add(cubeClone);
-
-            // spread.scale.z = -1;
-
-            // TODO: Draw new grout
-
-            // const AC = new THREE.Vector3().copy(spread.position).sub(center3D);
-            // const angle = AC.angleTo(UC);
-            // console.log('angle', angle * THREE.MathUtils.RAD2DEG - 45);
-
-            // spread.rotateX(45 * THREE.MathUtils.DEG2RAD);
-            // spread.rotateX(45 * THREE.MathUtils.DEG2RAD);
-
-            const distance = previousGrout.position.distanceTo(spread.position);
-
-            // console.log('distance', distance);
-
-            // // const newDirection = new THREE.Vector3();
-            // direction.copy(newSpreadPosition3D).sub(previousGrout.position).normalize();
-
-            // // direction.copy(spread.position).sub(center3D).normalize();
-
-            // const { topLeft, topRight, bottomLeft, bottomRight } = config;
-
-            // if (topLeft) {
-            //     cachedConfig.topLeft = true;
-            //     direction.x = 0;
-            //     direction.y = -1;
-            // } else if (bottomLeft) {
-            //     cachedConfig.bottomLeft = true;
-            //     direction.x = -1;
-            //     direction.y = 0;
-            // } else if (bottomRight) {
-            //     cachedConfig.bottomRight = true;
-            //     direction.x = 0;
-            //     direction.y = 1;
-            // } else if (topRight) {
-            //     cachedConfig.topRight = true;
-            //     direction.x = 1;
-            //     direction.y = 0;
-            // }
-
-            // // direction.copy(newDirection);
-
-            // // Calculate new direction from spread's position to newPosition
-
-            // spreads.push(spread);
-
-            // groutIndex++;
-
-            // if (
-            //     cachedConfig.topLeft &&
-            //     cachedConfig.bottomLeft &&
-            //     cachedConfig.bottomRight &&
-            //     cachedConfig.topRight
-            // ) {
-            //     const distance = initialGrout.position.distanceTo(spread.position);
-            //     if (distance < spreadDistance) conditionMet = true;
-            // }
         }
 
         this._spread.add(...spreads);

@@ -22,7 +22,7 @@ type PointAlongShape = {
     index: number;
 };
 
-// function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number) {
+// function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number = 1000) {
 //     const points = shape.getPoints();
 //     const totalLength = shape.getLength();
 
@@ -65,6 +65,12 @@ type PointAlongShape = {
 //     return interpolatedPoints;
 // }
 
+/**
+ *
+ * @param shape WORKS
+ * @param numPoints
+ * @returns
+ */
 function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number) {
     const points = shape.getPoints();
     // Assuming you have an array of Vector3 points representing the shape
@@ -101,7 +107,40 @@ function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number) {
     return newPoints;
 }
 
-// function evenlyInterpolateShape(shape, numPoints) {
+// /**
+//  * NEW ONE
+//  * @param shape
+//  * @param numPoints
+//  * @returns
+//  */
+// function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number) {
+//     const points = shape.getPoints();
+//     // Assuming you have an array of Vector3 points representing the shape
+//     const shapePoints = [...points, points[0]];
+
+//     // Specify the number of interpolated points you want
+//     const numInterpolatedPoints = 100; // Adjust this value as needed
+
+//     const newPoints = [];
+
+//     for (let i = 1; i < shapePoints.length; i++) {
+//         const segmentLength = shapePoints[i].distanceTo(shapePoints[i - 1]);
+//         const numSubdivisions = numInterpolatedPoints;
+
+//         for (let j = 0; j <= numSubdivisions; j++) {
+//             const t = j / numSubdivisions;
+//             const interpolatedPoint = new THREE.Vector3().lerpVectors(
+//                 shapePoints[i - 1],
+//                 shapePoints[i],
+//                 t,
+//             );
+//             newPoints.push(interpolatedPoint);
+//         }
+//     }
+//     return newPoints;
+// }
+
+// function evenlyInterpolateShape(shape, numPoints = 300) {
 //     const points = shape.getPoints();
 //     const totalLength = shape.getLength();
 
@@ -432,13 +471,9 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
     }
 
     public buildStick(position: number, stick: number) {
-        // const position = 20;
-
         debug.clear();
         const clone = this._shape.clone();
         const numPoints = 300;
-        // const interpolatedPoints = evenlyInterpolateShape(clone, numPoints);
-        // const points = interpolatedPoints;
 
         const points = clone.getPoints();
         this.stickInterpolatedPoints = points;
@@ -462,18 +497,6 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
             }),
         ];
 
-        const clipper = new ClipperLib.Clipper();
-        const clipperOffset = new ClipperLib.ClipperOffset();
-
-        // const result = new ClipperLib.Paths();
-
-        // TEST 1
-        // clipperOffset.AddPaths(originalPaths);
-        // clipperOffset.Execute(result, 20);
-
-        // clipper.AddPaths(originalPaths, ClipperLib.PolyType.ptSubject, true);
-        // clipper.Execute(ClipperLib.ClipType.ctOffset, result);
-
         const subject = new Shape(originalPaths, true);
         const result = subject.offset(stick);
 
@@ -482,7 +505,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         });
 
         const newShape = new THREE.Shape(newPoints);
-        const newInterpolatedPoints = evenlyInterpolateShape(newShape, numPoints);
+        const newInterpolatedPoints = evenlyInterpolateShape(newShape);
 
         newInterpolatedPoints.forEach((p) => {
             p.y += +this.tunnelHeight / 2;
@@ -493,46 +516,6 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
             // debug.add(clone);
         });
 
-        // this.stickInterpolatedPoints = newInterpolatedPoints;
-
-        // return;
-
-        // // return points;
-
-        // // Interpolate points
-        // const xs = [];
-        // const ys = [];
-        // for (let i = 0; i < points.length - 1; i++) {
-        //     const pointA = points[i];
-
-        //     xs.push(pointA.x);
-        //     ys.push(pointA.y);
-        // }
-
-        // const center = new THREE.Vector2();
-        // center.set(
-        //     xs.reduce((a, b) => a + b, 0) / xs.length,
-        //     ys.reduce((a, b) => a + b, 0) / ys.length,
-        // );
-
-        // const newPoints = [];
-
-        // for (let i = 0; i < points.length; i++) {
-        //     const pointA = points[i];
-        //     const direction = new THREE.Vector2();
-        //     direction.subVectors(pointA, center).normalize();
-
-        //     // const pointB = pointA.clone().add(direction.multiplyScalar(stick));
-        //     const pointB = pointA.clone();
-        //     pointB.x += stick;
-        //     pointB.y += stick;
-
-        //     newPoints.push(pointB);
-        // }
-
-        // const interpolatedPoints = this._generateInterpolatedPoints(100, newPoints);
-        // const stickInterpolatedPoints = this._generateInterpolatedPoints(100, newPoints);
-        // const stickInterpolatedPoints =\ this._generateInterpolatedPoints(100, newPoints);
         const stickInterpolatedPoints = newInterpolatedPoints.map(
             (p) => new THREE.Vector2(p.x, p.y),
         );
@@ -663,21 +646,48 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         spread.position.z = l;
         const { holeLength } = spread;
 
-        let conditionMet = false;
-        let whileIndex = 0;
+        const { tunnelHeight, tunnelRoofHeight } = this;
 
-        const positionAtTunnel = new THREE.Vector2(spread.position.x, spread.position.y);
+        // const positionAtTunnel = new THREE.Vector2(spread.position.x, spread.position.y - h);
+        const positionAtTunnel = new THREE.Vector2(
+            newMockStickPosition.point.x,
+            newMockStickPosition.point.y,
+        );
+
+        // console.log(spread.position.y, tunnelHeight);
+
+        //  Top;
+        // if (spread.position.y > 0) {
+        //     positionAtTunnel.y -= h;
+        // }
+        // //  Bottom
+        // if (spread.position.y < 0) {
+        //     positionAtTunnel.y += h;
+        // }
+        // // left
+        // if (spread.position.x > this.tunnelWidth / 2) {
+        //     positionAtTunnel.x -= h;
+        // }
+        // // right
+        // if (spread.position.x < -this.tunnelWidth / 2) {
+        //     positionAtTunnel.x += h;
+        // }
+
         let pointAtShape: PointAlongShape | null = null;
 
-        const tunnelPoitns = evenlyInterpolateShape(this._shape, 300);
-        tunnelPoitns.forEach((point) => {
+        const pointsAroundTunnel3D = evenlyInterpolateShape(this._shape);
+
+        const pointsAroundTunnel2D: THREE.Vector2[] = [];
+        pointsAroundTunnel3D.forEach((point) => {
             point.y += this.tunnelHeight / 2;
+
+            pointsAroundTunnel2D.push(new THREE.Vector2(point.x, point.y));
         });
 
         // console.log('X:', spread.position.x);
 
-        for (let i = 0; i < tunnelPoitns.length; i++) {
-            const element = tunnelPoitns[i];
+        for (let i = 0; i < pointsAroundTunnel3D.length; i++) {
+            const element = pointsAroundTunnel3D[i];
 
             const clone = cube.clone();
             clone.position.set(element.x, element.y, 0);
@@ -718,40 +728,97 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
             // return;
         }
 
-        // if (spread.position.x > 0 && spread.position.y > this.tunnelHeight / 2) {
-        //     clockwise = true;
-        //     return;
-        // } else if (spread.position.x < 0 && spread.position.y > this.tunnelHeight / 2) {
-        //     clockwise = false; // OK
-        // } else if (spread.position.x > 0 && spread.position.y < this.tunnelHeight / 2) {
-        //     clockwise = true; // OK
-        // } else if (spread.position.x < 0 && spread.position.y < this.tunnelHeight / 2) {
-        //     clockwise = true;
-        //     clockwise = false;
-        // }
-
-        pointAtShape = this.mockGetPointAtShape(tunnelPoitns, clockwise, 2, positionAtTunnel);
-
-        if (pointAtShape == null) {
-            console.error("Can't find point");
-            return;
+        if (
+            // Top left corner
+            spread.position.x > 0 &&
+            spread.position.y > this.tunnelHeight / 2
+        ) {
+            clockwise = false;
+        }
+        if (
+            // Bottom left corner
+            spread.position.x > 0 &&
+            spread.position.y < this.tunnelHeight / 2
+        ) {
+            clockwise = true;
         }
 
-        const distance = spread.position.distanceTo(
-            new THREE.Vector3(pointAtShape.point.x, pointAtShape.point.y, 0),
-        );
-        const diff = Math.abs(distance - holeLength);
-        if (diff > 0.5) console.log('DIFF');
+        // REGULAR;
+        {
+            const max1 = pointsAroundTunnel2D.length;
+            const max2 = this.stickInterpolatedPoints.length;
 
-        spread.lookAt(pointAtShape.point.x, pointAtShape.point.y, 0);
-        // while (conditionMet === false) {
-        //     whileIndex++;
-        //     if (whileIndex > 1_000) {
-        //         conditionMet = true;
-        //         console.error('Endless while loop');
-        //         return null;
-        //     }
-        // }
+            const adjustedIndex = Math.round((newMockStickPosition.index / max2) * max1);
+
+            const dummy = pointsAroundTunnel2D[adjustedIndex];
+            if (dummy) {
+                const clone1 = cube.clone();
+                clone1.position.set(dummy.x, dummy.y, 0);
+
+                const clone2 = cube.clone();
+                clone2.position.set(newMockStickPosition.point.x, newMockStickPosition.point.y, 0);
+
+                // debug.add(clone1);
+                // debug.add(clone2);
+            } else {
+                console.log('INDEX ??', adjustedIndex);
+
+                return;
+            }
+
+            pointAtShape = this.mockGetPointAtShape(pointsAroundTunnel2D, clockwise, 1, dummy);
+
+            if (pointAtShape == null) {
+                console.error("Can't find point");
+                return;
+            }
+            spread.lookAt(pointAtShape.point.x, pointAtShape.point.y, 0);
+        }
+
+        // WHILE TEST
+        {
+            // let whileIndex = 0;
+            // let tolerance = 10;
+            // let conditionMet = false;
+            // let whilePoint: THREE.Vector2 | PointAlongShape = positionAtTunnel;
+            // while (conditionMet === false) {
+            //     whileIndex++;
+            //     if (whileIndex > 1_000) {
+            //         conditionMet = true;
+            //         console.error('Endless while loop');
+            //         return;
+            //     }
+            //     pointAtShape = this.mockGetPointAtShape(
+            //         pointsAroundTunnel2D,
+            //         clockwise,
+            //         tolerance,
+            //         whilePoint,
+            //     );
+            //     if (pointAtShape == null) {
+            //         console.error("Can't find point");
+            //         return;
+            //     }
+            //     const distance = spread.position.distanceTo(
+            //         new THREE.Vector3(pointAtShape.point.x, pointAtShape.point.y, 0),
+            //     );
+            //     const diff = Math.abs(distance - holeLength);
+            //     if (diff < 1) {
+            //         conditionMet = true;
+            //         console.log('FOUND');
+            //         whilePoint = pointAtShape;
+            //         break;
+            //     }
+            //     whilePoint = pointAtShape;
+            //     tolerance -= 0.1;
+            //     if (tolerance < 1) {
+            //         tolerance = 1;
+            //         return;
+            //     }
+            // }
+            // console.log(whilePoint);
+            // if (whilePoint.point == null) return;
+            // spread.lookAt(whilePoint.point.x, whilePoint.point.y, 0);
+        }
     }
     public mockGetStick(point: THREE.Vector2, stickDistance = 3): PointAlongShape | null {
         const startingPointAtShape = this.mockGetPointAtShape(
@@ -792,7 +859,6 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
             if (distance > stickDistance) {
                 conditionMet = true;
                 // console.log('FOUND');
-                console.log(distance);
 
                 break;
             }

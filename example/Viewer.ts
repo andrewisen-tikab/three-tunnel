@@ -246,16 +246,16 @@ export default class Viewer {
 
         const grout1Params = {
             visible: true,
-            angle: 5,
-            holeLength: 10,
+            angle: 15,
+            holeLength: 25,
             overlap: 5,
             groutColorHEX: 0xff0000,
         };
 
         const grout2Params = {
             visible: true,
-            angle: 5,
-            holeLength: 10,
+            angle: 15,
+            holeLength: 25,
             overlap: 5,
             groutColorHEX: 0xff0000,
         };
