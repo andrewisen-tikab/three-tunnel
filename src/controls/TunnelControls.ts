@@ -176,7 +176,7 @@ export default class TunnelControls extends EventDispatcher {
         initialGrout.visible = false;
 
         // Calculate some maths
-        const { tunnelHeight } = this._tunnel;
+        const { tunnelHeight, tunnelRoofHeight } = this._tunnel;
         const l = Math.cos(initialGrout.angle) * initialGrout.holeLength;
         const h = Math.sin(initialGrout.angle) * initialGrout.holeLength;
 
@@ -225,9 +225,9 @@ export default class TunnelControls extends EventDispatcher {
             // Check if we need to stop
             if (
                 // Wait for the loop to do its thing
-                whileIndex > 5 &&
+                whileIndex > 10 &&
                 // Make sure it's over the tunnel's ""
-                spread.position.y > tunnelHeight &&
+                spread.position.y > tunnelHeight + tunnelRoofHeight &&
                 // N:B. X coordinate is world coordinate, not tunnel coordinate!
                 spread.position.x < 0
             ) {

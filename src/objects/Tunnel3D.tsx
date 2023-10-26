@@ -6,6 +6,7 @@ import { AbstractObject3D, AbstractTunnel3D, AbstractTunnel3DParams } from '../c
 import ClipperLib from '@doodle3d/clipper-lib';
 import Shape from '@doodle3d/clipper-js';
 import { Grout3D } from '..';
+import { disposeMesh, disposeMeshGroup } from '../utils/disposeMesh';
 
 type Found = {
     distance: number;
@@ -84,7 +85,7 @@ function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number) {
 
     // Step 2: Calculate the number of points to add
     // const desiredPointSpacing = 0.01; // 1cm
-    const desiredPointSpacing = 1; // 1cm
+    const desiredPointSpacing = 0.1; // 1cm
     const numPointsToAdd = Math.floor(totalLength / desiredPointSpacing);
 
     // Step 3: Distribute points along the shape
@@ -471,7 +472,9 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
     }
 
     public buildStick(position: number, stick: number) {
+        disposeMeshGroup(debug);
         debug.clear();
+
         const clone = this._shape.clone();
         const numPoints = 300;
 
@@ -513,7 +516,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         newInterpolatedPoints.forEach((point) => {
             const clone = cube.clone();
             clone.position.set(point.x, point.y, position);
-            // debug.add(clone);
+            debug.add(clone);
         });
 
         const stickInterpolatedPoints = newInterpolatedPoints.map(
@@ -859,7 +862,6 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
             if (distance > stickDistance) {
                 conditionMet = true;
                 // console.log('FOUND');
-
                 break;
             }
 
