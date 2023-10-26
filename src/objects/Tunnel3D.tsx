@@ -408,6 +408,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
      */
     public mockDoStick(
         grout: Grout3D,
+        initialZ: number,
         _h: number,
         l: number,
         point: THREE.Vector2,
@@ -419,7 +420,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         // This is the position at the end of the stick!
         grout.position.x = newMockStickPosition.point.x;
         grout.position.y = newMockStickPosition.point.y;
-        grout.position.z = l;
+        grout.position.z = initialZ + l;
 
         // Now, go back to the tunnel and find the point at the tunnel shape
         let newPointAtTunnelShape: PointAlongShape | null = null;
@@ -510,7 +511,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         }
 
         // If found, simply look at it
-        grout.lookAt(newPointAtTunnelShape.point.x, newPointAtTunnelShape.point.y, 0);
+        grout.lookAt(newPointAtTunnelShape.point.x, newPointAtTunnelShape.point.y, initialZ);
     }
 
     /**

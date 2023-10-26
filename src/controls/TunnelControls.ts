@@ -156,16 +156,24 @@ export default class TunnelControls extends EventDispatcher {
         this._spread.clear();
         if (this._tunnel == null) return;
 
+        for (let i = 0; i < this._grouts.length; i++) {
+            const element = this._grouts[i];
+
+            this._generateSpreadGrout(element);
+        }
+    }
+
+    private _generateSpreadGrout(initialGrout: Grout3D) {
         // The spread is only used for calculations and is not visible
-        const initialGrout = this._grouts[0];
         initialGrout.visible = false;
 
         // Calculate some maths
-        const { tunnelHeight, tunnelRoofHeight } = this._tunnel;
+        const { tunnelHeight, tunnelRoofHeight } = this._tunnel!;
         const l = Math.cos(initialGrout.angle) * initialGrout.holeLength;
         const h = Math.sin(initialGrout.angle) * initialGrout.holeLength;
 
         // Set the grout's position to the end (!) of the hole
+        const initialZ = initialGrout.position.z;
         initialGrout.position.y += h;
         initialGrout.position.z += l; // move towards the spread
 
@@ -200,8 +208,9 @@ export default class TunnelControls extends EventDispatcher {
                 currentSpreadPosition.y,
             );
 
-            this._tunnel.mockDoStick(
+            this._tunnel!.mockDoStick(
                 spread,
+                initialZ,
                 h,
                 l,
                 new THREE.Vector2(currentSpreadPosition2D.x, currentSpreadPosition2D.y),
