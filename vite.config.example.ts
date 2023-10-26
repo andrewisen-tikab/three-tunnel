@@ -15,7 +15,7 @@ export default defineConfig({
                 name: 'Tunnel Sketcher',
                 short_name: 'Tunnel Sketcher',
                 description: 'Tunnel and grouts sketcher',
-                start_url: '.',
+                start_url: './example/',
                 theme_color: '#ffffff',
                 background_color: '#ffffff',
                 display: 'standalone',
