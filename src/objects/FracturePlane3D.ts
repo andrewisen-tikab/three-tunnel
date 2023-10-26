@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { AbstractFracturePlane3D, AbstractFracturePlane3DParams, AbstractObject3D } from '../core';
 
+const x = /* #__PURE__ */ new THREE.Vector3(1, 0, 0);
+const y = /* #__PURE__ */ new THREE.Vector3(0, 1, 0);
+
 export default class FracturePlane3D
     extends THREE.Object3D
     implements AbstractFracturePlane3D, AbstractObject3D
@@ -8,6 +11,8 @@ export default class FracturePlane3D
     public isFracturePlane3D: boolean = true;
 
     public xPosition: number;
+
+    public zPosition: number;
 
     public strike: number;
 
@@ -20,6 +25,7 @@ export default class FracturePlane3D
     constructor() {
         super();
         this.xPosition = 0;
+        this.zPosition = 0;
         this.strike = 0;
         this.dip = 0;
         this.opacity = 0.5;
@@ -39,10 +45,11 @@ export default class FracturePlane3D
         const plane = new THREE.Mesh(geometry, material);
         plane.visible = this.visible;
 
-        plane.rotation.y = -this.strike * THREE.MathUtils.DEG2RAD;
-        plane.rotation.x = (90 - this.dip) * THREE.MathUtils.DEG2RAD;
-
         plane.position.z = this.xPosition;
+        plane.position.y = this.zPosition;
+
+        plane.rotateOnWorldAxis(x, (90 - this.dip) * THREE.MathUtils.DEG2RAD);
+        plane.rotateOnWorldAxis(y, this.strike * THREE.MathUtils.DEG2RAD);
 
         this.add(plane);
     }
@@ -52,10 +59,11 @@ export default class FracturePlane3D
     }
 
     public toJSON(): AbstractFracturePlane3DParams {
-        const { visible, xPosition, strike, dip, opacity, planeColorHEX } = this;
+        const { visible, xPosition, zPosition, strike, dip, opacity, planeColorHEX } = this;
         const object: AbstractFracturePlane3DParams = {
             visible,
             xPosition,
+            zPosition,
             strike,
             dip,
             opacity,
