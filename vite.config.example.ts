@@ -9,9 +9,8 @@ export default defineConfig({
         react(),
         splitVendorChunkPlugin(),
         VitePWA({
-            base: '../',
+            base: './../',
             registerType: 'autoUpdate',
-
             manifest: {
                 name: 'Tunnel Sketcher',
                 short_name: 'Tunnel Sketcher',
@@ -22,13 +21,13 @@ export default defineConfig({
                 display: 'standalone',
                 icons: [
                     {
-                        src: '../favicon/android-chrome-192x192.png',
+                        src: './../favicon/android-chrome-192x192.png',
                         sizes: '192x192',
                         type: 'image/png',
                         purpose: 'any maskable',
                     },
                     {
-                        src: '../favicon/android-chrome-512x512.png',
+                        src: './../favicon/android-chrome-512x512.png',
                         sizes: '512x512',
                         type: 'image/png',
                         purpose: 'any maskable',
@@ -37,7 +36,7 @@ export default defineConfig({
             },
             workbox: {
                 modifyURLPrefix: {
-                    '': '../',
+                    '': './../',
                 },
             },
         }),
