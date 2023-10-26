@@ -88,7 +88,7 @@ export default class Viewer {
         this._stats = new Stats();
         document.body.appendChild(this._stats.dom);
 
-        this._gui = new GUI().title(`three-tunnel v${VERSION}`);
+        this._gui = new GUI().title(`Tunnel Sketcher v${VERSION}`);
 
         this._clock = new THREE.Clock();
 
