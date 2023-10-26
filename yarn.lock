@@ -46,6 +46,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@doodle3d/clipper-js@npm:^1.0.11":
+  version: 1.0.11
+  resolution: "@doodle3d/clipper-js@npm:1.0.11"
+  dependencies:
+    "@doodle3d/clipper-lib": ^6.4.2-b
+  checksum: 5973939296f5ebeb52a569d005165bf34d7c2de6595d485499baee30833180c8598f296c1ee060a5bdd27b7ead15e00f07c7d995ce85d5ae92fcd2fdfefec12f
+  languageName: node
+  linkType: hard
+
+"@doodle3d/clipper-lib@npm:^6.4.2-b":
+  version: 6.4.2
+  resolution: "@doodle3d/clipper-lib@npm:6.4.2"
+  checksum: 6645e2a3686aff48f7919e0383b0c835f2512d84347cab733e409c382251b30dc2e5be106ef0d0e35ed0ee7ddc2a9f918233abb3e2976a9ccfe17b16771646e3
+  languageName: node
+  linkType: hard
+
 "@esbuild/android-arm64@npm:0.18.20":
   version: 0.18.20
   resolution: "@esbuild/android-arm64@npm:0.18.20"
@@ -2965,10 +2981,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"three-spritetext@npm:^1.8.1":
+  version: 1.8.1
+  resolution: "three-spritetext@npm:1.8.1"
+  peerDependencies:
+    three: ">=0.86.0"
+  checksum: 9173045851ad38035e386cc0bf44c2163ea52d8dbb2d18d89ae2137c7f27b08073c155f89108bf5fb1c0dc69baa520b6ec7722a6e5f260c33e2f3a92d4e0c6f7
+  languageName: node
+  linkType: hard
+
 "three-tunnel@workspace:.":
   version: 0.0.0-use.local
   resolution: "three-tunnel@workspace:."
   dependencies:
+    "@doodle3d/clipper-js": ^1.0.11
     "@types/file-saver": ^2.0.5
     "@types/react": ^18.2.15
     "@types/react-dom": ^18.2.7
@@ -2984,6 +3010,7 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     three: ^0.157.0
+    three-spritetext: ^1.8.1
     typedoc: ^0.25.2
     typescript: ^5.0.2
     vite: ^4.4.5

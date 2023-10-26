@@ -217,61 +217,21 @@ export default class Viewer {
                 updateGroutFolder(value);
             });
 
-        groutFolder
-            .add(this.tunnelControls, 'showMirror')
-            .name('Show Mirrored Grouts')
-            .onChange((value: boolean) => {
-                this.tunnelControls.showMirror = value;
-                this.tunnelControls.update();
-            });
-
-        groutFolder
-            .add(this.tunnelControls, 'showSpread')
-            .name('Show Spread Grouts')
-            .onChange((value: boolean) => {
-                this.tunnelControls.showSpread = value;
-                this.tunnelControls.update();
-            });
-
-        groutFolder
-            .add(this.tunnelControls.spreadConfig, 'numberOfGrouts', 1, 10, 1)
-            .name('Number of Grouts')
-            .onChange((value: number) => {
-                this.tunnelControls.spreadConfig.numberOfGrouts = value;
-                this.tunnelControls.update();
-            });
-
-        groutFolder
-            .add(this.tunnelControls.spreadConfig, 'spreadAngle', 1, 90, 1)
-            .name('Number of Grouts')
-            .onChange((value: number) => {
-                this.tunnelControls.spreadConfig.spreadAngle = value;
-                this.tunnelControls.update();
-            });
-
-        groutFolder
-            .add(this.tunnelControls.spreadConfig, 'spreadDistance', 1, 20, 1)
-            .name('Number of Grouts')
-            .onChange((value: number) => {
-                this.tunnelControls.spreadConfig.spreadDistance = value;
-                this.tunnelControls.update();
-            });
-
         const grout1Folder = groutFolder.addFolder('#1').close();
         const grout2Folder = groutFolder.addFolder('#2').close();
 
         const grout1Params = {
             visible: true,
-            angle: 5,
-            holeLength: 10,
+            angle: 15,
+            holeLength: 25,
             overlap: 5,
             groutColorHEX: 0xff0000,
         };
 
         const grout2Params = {
             visible: true,
-            angle: 5,
-            holeLength: 10,
+            angle: 15,
+            holeLength: 25,
             overlap: 5,
             groutColorHEX: 0xff0000,
         };

@@ -73,6 +73,7 @@ export type AbstractGrout3D = {
     holeLength: number;
     /**
      * Angle parallel to the tunnel (+Z) and up towards the ground (+Y).
+     * In radians.
      */
     angle: number;
     /**
@@ -158,14 +159,4 @@ export type AbstractFracturePlane3DParams = Omit<AbstractFracturePlane3D, 'isFra
 /**
  * Abstract type for a tunnel controls.
  */
-export type AbstractTunnelControlsParams = {
-    /**
-     * On each side of the center
-     */
-    numberOfGrouts: number;
-    spreadDistance: number;
-    /**
-     * Angle in degrees
-     */
-    spreadAngle: number;
-};
+export type AbstractTunnelControlsParams = object;

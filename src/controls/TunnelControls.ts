@@ -9,16 +9,18 @@ import {
 } from '../core';
 import { EventDispatcher } from './EventDispatcher';
 
+const geometry = new THREE.BoxGeometry(1, 1, 1);
+const material = new THREE.MeshBasicMaterial({
+    // blue
+    color: 0x0000ff,
+});
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+const cube = new THREE.Mesh(geometry, material);
+
 export default class TunnelControls extends EventDispatcher {
     public groupGrouts: boolean = true;
-    public showMirror: boolean = true;
-    public showSpread: boolean = true;
-
-    public spreadConfig: AbstractTunnelControlsParams = {
-        numberOfGrouts: 2,
-        spreadDistance: 3,
-        spreadAngle: 10,
-    };
 
     private _tunnel: Tunnel3D | null = null;
     private _grouts: Grout3D[] = [];
@@ -97,8 +99,18 @@ export default class TunnelControls extends EventDispatcher {
     }
     private _updateGrouts() {
         this.groupGrouts ? this._updateGroutsAsGroup() : this._updateGroutsIndividually();
-        this._generateMirroredGrouts();
+        this._buildStick();
         this._generateSpreadGrouts();
+    }
+
+    private _buildStick() {
+        if (this._tunnel == null) throw new Error('Tunnel is not attached.');
+        const initialGrout = this._grouts[0];
+        if (initialGrout == null) throw new Error('Grout is not found.');
+
+        const l = Math.cos(initialGrout.angle) * initialGrout.holeLength;
+        const h = Math.sin(initialGrout.angle) * initialGrout.holeLength;
+        this._tunnel.buildStick(l, h);
     }
 
     private _updateGroutsAsGroup() {
@@ -132,91 +144,103 @@ export default class TunnelControls extends EventDispatcher {
         currentGrout.position.z = newZPosition - currentGrout.overlap;
     }
 
-    private _generateMirroredGrouts() {
-        this._mirror.clear();
-        if (this._tunnel == null) return;
-        if (this.showMirror === false) return;
-
-        const mirrorGrouts = this._grouts.map((grout) => {
-            const json = grout.toJSON();
-            const mirror = new Grout3D(this._tunnel!);
-            mirror.fromJSON(json);
-            mirror.rotation.x *= -1;
-
-            mirror.position.z = grout.position.z;
-            mirror.position.y = 0;
-
-            return mirror;
-        });
-
-        this._mirror.add(...mirrorGrouts);
-    }
-
+    /**
+     * Given a spread, generate the grouts around the spread
+     * @returns
+     */
     private _generateSpreadGrouts() {
+        // Clear any previous spread
         this._spread.clear();
         if (this._tunnel == null) return;
-        if (this.showSpread === false) return;
 
-        const { numberOfGrouts, spreadDistance, spreadAngle } = this.spreadConfig;
-        const spreadGrouts = this._grouts.flatMap((grout) => {
-            const json = grout.toJSON();
-            const grouts: Grout3D[] = [];
+        for (let i = 0; i < this._grouts.length; i++) {
+            const element = this._grouts[i];
 
-            for (let i = 0; i < numberOfGrouts; i++) {
-                for (let j = 0; j < 2; j++) {
-                    const spread = new Grout3D(this._tunnel!);
-                    spread.fromJSON(json);
-                    spread.position.x =
-                        j === 0 ? +spreadDistance * (i + 1) : -spreadDistance * (i + 1);
-                    spread.rotateY(
-                        j === 0
-                            ? +(spreadAngle * THREE.MathUtils.DEG2RAD)
-                            : -(spreadAngle * THREE.MathUtils.DEG2RAD),
-                    );
-                    spread.position.z = grout.position.z;
+            this._generateSpreadGrout(element);
+        }
+    }
 
-                    grouts.push(spread);
+    private _generateSpreadGrout(initialGrout: Grout3D) {
+        // The spread is only used for calculations and is not visible
+        initialGrout.visible = false;
 
-                    if (this.showMirror == false) continue;
+        // Calculate some maths
+        const { tunnelHeight, tunnelRoofHeight } = this._tunnel!;
+        const l = Math.cos(initialGrout.angle) * initialGrout.holeLength;
+        const h = Math.sin(initialGrout.angle) * initialGrout.holeLength;
 
-                    const mirror = new Grout3D(this._tunnel!);
-                    mirror.fromJSON(json);
-                    mirror.rotation.x *= -1;
+        // Set the grout's position to the end (!) of the hole
+        const initialZ = initialGrout.position.z;
+        initialGrout.position.y += h;
+        initialGrout.position.z += l; // move towards the spread
 
-                    mirror.position.x =
-                        j === 0 ? +spreadDistance * (i + 1) : -spreadDistance * (i + 1);
-                    mirror.rotateY(
-                        j === 0
-                            ? +(spreadAngle * THREE.MathUtils.DEG2RAD)
-                            : -(spreadAngle * THREE.MathUtils.DEG2RAD),
-                    );
+        // Setup iteration
+        let conditionMet = false;
+        let whileIndex = 0; // Keep track of iterations
+        let groutIndex = 0; // Keep track of grout used
 
-                    mirror.position.z = grout.position.z;
-                    mirror.position.y = 0;
-                    grouts.push(mirror);
-                }
+        const spreads: Grout3D[] = [initialGrout];
+
+        while (conditionMet === false) {
+            // Safety check
+            whileIndex++;
+            if (whileIndex > 30) {
+                conditionMet = true;
+                break;
             }
 
-            return grouts;
-        });
+            // Get the previous grout
+            const previousGrout = spreads[groutIndex];
 
-        this._spread.add(...spreadGrouts);
+            // Setup the new one
+            const json = previousGrout.toJSON();
+            const spread = new Grout3D(this._tunnel!);
+            spread.fromJSON(json);
+            spread.position.copy(previousGrout.position);
+
+            // Set the new grout's position to the end (!) of the hole
+            const currentSpreadPosition = new THREE.Vector3().copy(spread.position);
+            const currentSpreadPosition2D = new THREE.Vector2(
+                currentSpreadPosition.x,
+                currentSpreadPosition.y,
+            );
+
+            this._tunnel!.mockDoStick(
+                spread,
+                initialZ,
+                h,
+                l,
+                new THREE.Vector2(currentSpreadPosition2D.x, currentSpreadPosition2D.y),
+            );
+
+            // Check if we need to stop
+            if (
+                // Wait for the loop to do its thing
+                whileIndex > 10 &&
+                // Make sure it's over the tunnel's ""
+                spread.position.y > tunnelHeight + tunnelRoofHeight &&
+                // N:B. X coordinate is world coordinate, not tunnel coordinate!
+                spread.position.x < 0
+            ) {
+                conditionMet = true;
+                break;
+            }
+
+            spreads.push(spread);
+            groutIndex++;
+        }
+
+        this._spread.add(...spreads);
     }
 
     toJSON(): AbstractTunnelControlsParams {
-        const {
-            spreadConfig: { numberOfGrouts, spreadDistance, spreadAngle },
-        } = this;
-        const object: AbstractTunnelControlsParams = {
-            numberOfGrouts,
-            spreadDistance,
-            spreadAngle,
-        };
+        const object: AbstractTunnelControlsParams = {};
         return object;
     }
 
-    fromJSON(json: AbstractTunnelControlsParams): void {
-        Object.assign(this, json);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    fromJSON(_json: AbstractTunnelControlsParams): void {
+        // Object.assign(this, json);
         this.update();
     }
 }

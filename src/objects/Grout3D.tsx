@@ -12,15 +12,17 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D, 
 
     public screenLength: number = 1;
 
-    public angle: number = 5 * THREE.MathUtils.DEG2RAD;
+    public angle: number = 15 * THREE.MathUtils.DEG2RAD;
 
     public cutDepth: number = 1;
 
     public overlap: number = 5;
 
-    public holeLength: number = 10;
+    public holeLength: number = 20;
 
     public groutColorHEX: number = 0xff0000;
+
+    public radius = 1 / 5;
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -38,7 +40,7 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D, 
     private _build() {
         const { holeLength, groutColorHEX } = this;
 
-        const geometry = new THREE.CylinderGeometry(1 / 3, 1 / 3, holeLength, 32);
+        const geometry = new THREE.CylinderGeometry(this.radius, this.radius, holeLength, 32);
         const material = new THREE.MeshBasicMaterial({
             color: groutColorHEX,
         });
