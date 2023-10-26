@@ -67,3 +67,21 @@ button:focus-visible {
         background-color: #f9f9f9;
     }
 }
+
+#info {
+    pointer-events: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 999;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff; /* Text color */
+    padding: 10px; /* Adjust padding as needed */
+}
+
+#info a {
+    font-weight: 800;
+    color: white;
+    pointer-events: all;
+    cursor: pointer;
+}
