@@ -9,13 +9,36 @@ export default defineConfig({
         react(),
         splitVendorChunkPlugin(),
         VitePWA({
+            base: '../',
             registerType: 'autoUpdate',
+
             manifest: {
                 name: 'Tunnel Sketcher',
                 short_name: 'Tunnel Sketcher',
-                start_url: '.',
-                background_color: '#fff',
                 description: 'Tunnel and grouts sketcher',
+                start_url: '.',
+                theme_color: '#ffffff',
+                background_color: '#ffffff',
+                display: 'standalone',
+                icons: [
+                    {
+                        src: '../favicon/android-chrome-192x192.png',
+                        sizes: '192x192',
+                        type: 'image/png',
+                        purpose: 'any maskable',
+                    },
+                    {
+                        src: '../favicon/android-chrome-512x512.png',
+                        sizes: '512x512',
+                        type: 'image/png',
+                        purpose: 'any maskable',
+                    },
+                ],
+            },
+            workbox: {
+                modifyURLPrefix: {
+                    '': '../',
+                },
             },
         }),
     ],
