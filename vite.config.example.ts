@@ -36,7 +36,7 @@ export default defineConfig({
             },
             workbox: {
                 modifyURLPrefix: {
-                    '': './../',
+                    '': './',
                 },
             },
         }),
