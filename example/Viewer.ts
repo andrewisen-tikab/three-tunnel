@@ -176,7 +176,7 @@ export default class Viewer {
             .disable();
 
         tunnelFolder
-            .add(this._tunnel, 'tunnelWidth', 1, 100)
+            .add(this._tunnel, 'tunnelWidth', 1, 30)
             .name('Width [W] (m)')
             .onChange((value: number) => {
                 this.tunnelControls.setTunnelParams({ tunnelWidth: value });
