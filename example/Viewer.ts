@@ -217,30 +217,6 @@ export default class Viewer {
                 updateGroutFolder(value);
             });
 
-        groutFolder
-            .add(this.tunnelControls.spreadConfig, 'numberOfGrouts', 1, 10, 1)
-            .name('Number of Grouts')
-            .onChange((value: number) => {
-                this.tunnelControls.spreadConfig.numberOfGrouts = value;
-                this.tunnelControls.update();
-            });
-
-        groutFolder
-            .add(this.tunnelControls.spreadConfig, 'spreadAngle', 1, 90, 1)
-            .name('Number of Grouts')
-            .onChange((value: number) => {
-                this.tunnelControls.spreadConfig.spreadAngle = value;
-                this.tunnelControls.update();
-            });
-
-        groutFolder
-            .add(this.tunnelControls.spreadConfig, 'spreadDistance', 1, 20, 1)
-            .name('Number of Grouts')
-            .onChange((value: number) => {
-                this.tunnelControls.spreadConfig.spreadDistance = value;
-                this.tunnelControls.update();
-            });
-
         const grout1Folder = groutFolder.addFolder('#1').close();
         const grout2Folder = groutFolder.addFolder('#2').close();
 

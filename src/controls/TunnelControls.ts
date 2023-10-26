@@ -19,12 +19,6 @@ const cube = new THREE.Mesh(geometry, material);
 export default class TunnelControls extends EventDispatcher {
     public groupGrouts: boolean = true;
 
-    public spreadConfig: AbstractTunnelControlsParams = {
-        numberOfGrouts: 1,
-        spreadDistance: 3,
-        spreadAngle: 10,
-    };
-
     private _tunnel: Tunnel3D | null = null;
     private _grouts: Grout3D[] = [];
     private _group: THREE.Object3D;
@@ -237,19 +231,13 @@ export default class TunnelControls extends EventDispatcher {
     }
 
     toJSON(): AbstractTunnelControlsParams {
-        const {
-            spreadConfig: { numberOfGrouts, spreadDistance, spreadAngle },
-        } = this;
-        const object: AbstractTunnelControlsParams = {
-            numberOfGrouts,
-            spreadDistance,
-            spreadAngle,
-        };
+        const object: AbstractTunnelControlsParams = {};
         return object;
     }
 
-    fromJSON(json: AbstractTunnelControlsParams): void {
-        Object.assign(this, json);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    fromJSON(_json: AbstractTunnelControlsParams): void {
+        // Object.assign(this, json);
         this.update();
     }
 }
