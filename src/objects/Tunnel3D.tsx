@@ -3,10 +3,9 @@ import SpriteText from 'three-spritetext';
 
 import { AbstractObject3D, AbstractTunnel3D, AbstractTunnel3DParams } from '../core';
 
-import ClipperLib from '@doodle3d/clipper-lib';
 import Shape from '@doodle3d/clipper-js';
 import { Grout3D } from '..';
-import { disposeMesh, disposeMeshGroup } from '../utils/disposeMesh';
+import { disposeMeshGroup } from '../utils/disposeMesh';
 
 type Found = {
     distance: number;
@@ -23,56 +22,13 @@ type PointAlongShape = {
     index: number;
 };
 
-// function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number = 1000) {
-//     const points = shape.getPoints();
-//     const totalLength = shape.getLength();
-
-//     const interpolatedPoints = [];
-//     const segmentLength = totalLength / (numPoints - 1);
-
-//     for (let i = 0; i < numPoints; i++) {
-//         let distance = i * segmentLength;
-
-//         for (let j = 0; j < points.length - 1; j++) {
-//             const p1 = points[j];
-//             const p2 = points[j + 1];
-//             const segmentLength = p1.distanceTo(p2);
-
-//             if (distance < segmentLength) {
-//                 const t = distance / segmentLength;
-//                 const interpolatedPoint = p1.clone().lerp(p2, t);
-//                 interpolatedPoints.push(interpolatedPoint);
-//                 break;
-//             } else {
-//                 distance -= segmentLength;
-//             }
-//         }
-//     }
-
-//     // const p1 = points[points.length - 1];
-//     // const p2 = points[0];
-
-//     // const delta = p1.distanceTo(p2);
-//     // // I want add a point  every 0.1 unit
-//     // const step = 0.01;
-//     // let distance = 0;
-//     // while (distance < delta) {
-//     //     const t = distance / delta;
-//     //     const interpolatedPoint = p1.clone().lerp(p2, t);
-//     //     interpolatedPoints.push(interpolatedPoint);
-//     //     distance += step;
-//     // }
-
-//     return interpolatedPoints;
-// }
-
 /**
- *
- * @param shape WORKS
- * @param numPoints
- * @returns
+ * Given a {@link THREE.Shape}, evenly interpolate points along the shape.
+ * @param shape Shape to be interpolated
+ * @param desiredPointSpacing Space between each interpolated point
+ * @returns Interpolated points along the shape
  */
-function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number) {
+function evenlyInterpolateShape(shape: THREE.Shape, desiredPointSpacing: number = 0.1) {
     const points = shape.getPoints();
     // Assuming you have an array of Vector3 points representing the shape
     const shapePoints = [...points, points[0]];
@@ -84,8 +40,6 @@ function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number) {
     }
 
     // Step 2: Calculate the number of points to add
-    // const desiredPointSpacing = 0.01; // 1cm
-    const desiredPointSpacing = 0.1; // 1cm
     const numPointsToAdd = Math.floor(totalLength / desiredPointSpacing);
 
     // Step 3: Distribute points along the shape
@@ -97,6 +51,8 @@ function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number) {
         for (let j = 0; j <= numSubdivisions; j++) {
             const t = j / numSubdivisions;
             const interpolatedPoint = new THREE.Vector3().lerpVectors(
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 shapePoints[i - 1],
                 shapePoints[i],
                 t,
@@ -107,76 +63,6 @@ function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number) {
 
     return newPoints;
 }
-
-// /**
-//  * NEW ONE
-//  * @param shape
-//  * @param numPoints
-//  * @returns
-//  */
-// function evenlyInterpolateShape(shape: THREE.Shape, numPoints: number) {
-//     const points = shape.getPoints();
-//     // Assuming you have an array of Vector3 points representing the shape
-//     const shapePoints = [...points, points[0]];
-
-//     // Specify the number of interpolated points you want
-//     const numInterpolatedPoints = 100; // Adjust this value as needed
-
-//     const newPoints = [];
-
-//     for (let i = 1; i < shapePoints.length; i++) {
-//         const segmentLength = shapePoints[i].distanceTo(shapePoints[i - 1]);
-//         const numSubdivisions = numInterpolatedPoints;
-
-//         for (let j = 0; j <= numSubdivisions; j++) {
-//             const t = j / numSubdivisions;
-//             const interpolatedPoint = new THREE.Vector3().lerpVectors(
-//                 shapePoints[i - 1],
-//                 shapePoints[i],
-//                 t,
-//             );
-//             newPoints.push(interpolatedPoint);
-//         }
-//     }
-//     return newPoints;
-// }
-
-// function evenlyInterpolateShape(shape, numPoints = 300) {
-//     const points = shape.getPoints();
-//     const totalLength = shape.getLength();
-
-//     const interpolatedPoints = [];
-//     const segmentLength = totalLength / (numPoints - 1);
-
-//     let currentDistance = 0;
-
-//     for (let i = 0; i < numPoints; i++) {
-//         for (let j = 0; j < points.length - 1; j++) {
-//             const p1 = points[j];
-//             const p2 = points[j + 1];
-//             const segmentLength = p1.distanceTo(p2);
-
-//             if (currentDistance <= segmentLength) {
-//                 const t = currentDistance / segmentLength;
-//                 const interpolatedPoint = p1.clone().lerp(p2, t);
-//                 interpolatedPoints.push(interpolatedPoint);
-//                 currentDistance += segmentLength;
-//             } else {
-//                 currentDistance -= segmentLength;
-//                 if (j === points.length - 2) {
-//                     // Reached the last segment, continue with the first point to close the shape
-//                     const lastSegmentLength = p2.distanceTo(points[0]);
-//                     const t = currentDistance / lastSegmentLength;
-//                     const interpolatedPoint = p2.clone().lerp(points[0], t);
-//                     interpolatedPoints.push(interpolatedPoint);
-//                     currentDistance += lastSegmentLength;
-//                 }
-//             }
-//         }
-//     }
-
-//     return interpolatedPoints;
-// }
 
 /**
  * An extruded tunnel shape with straight walls and an elliptical roof.
@@ -196,7 +82,20 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
     private _shape: THREE.Shape;
 
-    stickInterpolatedPoints: THREE.Vector2[];
+    /**
+     * Interpolated points along the stick's shape as {@link THREE.Vector2}
+     */
+    stickInterpolatedPoints: THREE.Vector2[] = [];
+
+    /**
+     * Interpolated points along the tunnel's shape as {@link THREE.Vector3}
+     */
+    interpolatedPoints3D: THREE.Vector3[] = [];
+
+    /**
+     * Interpolated points along the tunnel's shape as {@link THREE.Vector2}
+     */
+    interpolatedPoints2D: THREE.Vector2[] = [];
 
     constructor(params?: Partial<AbstractTunnel3DParams>) {
         super();
@@ -272,6 +171,14 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         this.add(this.groutGroup);
 
         this.add(debug);
+
+        this.interpolatedPoints3D = evenlyInterpolateShape(tunnelShape);
+        this.interpolatedPoints3D.forEach((point) => {
+            point.y += this.tunnelHeight / 2;
+        });
+        this.interpolatedPoints2D = this.interpolatedPoints3D.map(
+            (p) => new THREE.Vector2(p.x, p.y),
+        );
     }
 
     update(): void {
@@ -293,63 +200,6 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
     fromJSON(params: AbstractTunnel3D): void {
         Object.assign(this, params);
-    }
-
-    public getShapeDEV(myPointInWorld: THREE.Vector2) {
-        const { tunnelHeight } = this;
-
-        // const myPointInWorld = new THREE.Vector2(10, 0);
-
-        const offset = new THREE.Vector2(
-            0,
-            // +Y is internally offset
-            tunnelHeight / 2,
-        );
-
-        // Interpolate points
-        const interpolatedPoints = this._generateInterpolatedPoints(1_000);
-
-        // Convert to local space
-        const myPointInLocal = myPointInWorld.clone().sub(offset);
-        const closetsPointInLocal = this._findClosestPoint(interpolatedPoints, myPointInLocal);
-
-        // Convert back
-        const closetsPointInWorld = closetsPointInLocal.clone();
-        closetsPointInWorld.x += offset.x;
-        closetsPointInWorld.y += offset.y;
-
-        // Add debug point
-        // const geometry = new THREE.BoxGeometry(1, 1, 1);
-        // const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        // const cube = new THREE.Mesh(geometry, material);
-        // cube.position.set(closetsPointInWorld.x, closetsPointInWorld.y, 0);
-
-        // this.add(cube);
-
-        const config = {
-            topLeft: false,
-            topRight: false,
-            bottomLeft: false,
-            bottomRight: false,
-        };
-
-        const { x: x1, y: y1 } = closetsPointInWorld;
-        const x = Math.round(x1);
-        const y = Math.round(y1);
-
-        // console.log(x, y);
-
-        if (x === 10 && y === 10) {
-            config.topLeft = true;
-        } else if (x === 10 && y === 0) {
-            config.bottomLeft = true;
-        } else if (x === -10 && y === 0) {
-            config.bottomRight = true;
-        } else if (x === -10 && y === 10) {
-            config.topRight = true;
-        }
-
-        return { closetsPointInWorld, config };
     }
 
     public buildTunnelInterpolation(spanDistance = 3) {
@@ -472,260 +322,152 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
     }
 
     public buildStick(position: number, stick: number) {
+        // Clear previous
         disposeMeshGroup(debug);
         debug.clear();
 
+        // Clone the object, just in case
         const clone = this._shape.clone();
-        const numPoints = 300;
-
         const points = clone.getPoints();
         this.stickInterpolatedPoints = points;
 
-        points.forEach((point, index) => {
-            const clone = cube.clone();
-            clone.position.set(point.x, point.y + this.tunnelHeight / 2, position);
+        // Debug
+        {
+            // points.forEach((point, index) => {
+            //     const clone = cube.clone();
+            //     clone.position.set(point.x, point.y + this.tunnelHeight / 2, position);
+            //     // clone.material.color.addScalar(1)
+            //     const myText = new SpriteText(`${index}`, 1, 'blue');
+            //     myText.position.set(point.x, point.y + this.tunnelHeight / 2, -1);
+            //     myText.material.depthTest = false;
+            //     myText.renderOrder = 1;
+            //     // debug.add(myText);s
+            // });
+        }
 
-            // clone.material.color.addScalar(1)
-            const myText = new SpriteText(`${index}`, 1, 'blue');
-            myText.position.set(point.x, point.y + this.tunnelHeight / 2, -1);
-
-            myText.material.depthTest = false;
-            myText.renderOrder = 1;
-            // debug.add(myText);s
-        });
-
+        // Prepare the shape for offsetting by converting the points to Clipper format
         const originalPaths = [
             points.map((point) => {
                 return { X: point.x, Y: point.y };
             }),
         ];
-
+        // Offset the shape using Clipper
         const subject = new Shape(originalPaths, true);
         const result = subject.offset(stick);
 
+        // Convert back to THREE.js format
         const newPoints = result.paths[0].map((point) => {
             return new THREE.Vector2(point.X, point.Y);
         });
 
+        // Generate interpolated points
         const newShape = new THREE.Shape(newPoints);
         const newInterpolatedPoints = evenlyInterpolateShape(newShape);
 
+        // Normalize the height
         newInterpolatedPoints.forEach((p) => {
-            p.y += +this.tunnelHeight / 2;
-        });
-        newInterpolatedPoints.forEach((point) => {
-            const clone = cube.clone();
-            clone.position.set(point.x, point.y, position);
-            debug.add(clone);
+            p.y += +this.tunnelHeight / 2; // World space
         });
 
+        // Debug
+        {
+            // newInterpolatedPoints.forEach((point) => {
+            //     const clone = cube.clone();
+            //     clone.position.set(point.x, point.y, position);
+            //     debug.add(clone);
+            // });
+        }
+
+        // Convert to `Vector2`
         const stickInterpolatedPoints = newInterpolatedPoints.map(
             (p) => new THREE.Vector2(p.x, p.y),
         );
 
+        // Store the points for later use
         this.stickInterpolatedPoints = stickInterpolatedPoints;
 
-        for (let i = 0; i < stickInterpolatedPoints.length; i++) {
-            const element = stickInterpolatedPoints[i];
+        // Debug
+        {
+            for (let i = 0; i < stickInterpolatedPoints.length; i++) {
+                const element = stickInterpolatedPoints[i];
 
-            const clone = cube.clone();
-            clone.position.set(element.x, element.y, position);
-            // debug.add(clone);
-
-            // // ONly have 2 decimal places
-            // const x = Math.round(element.x * 100) / 100;
-            // const y = Math.round(element.y * 100) / 100;
-
-            // // const text = `${x}, ${y}`;
-            // const text = `${y}`;
-
-            // const myText = new SpriteText(text, 0.5, 'blue');
-            // myText.position.set(element.x, element.y, -1);
-
-            // myText.material.depthTest = false;
-            // myText.renderOrder = 1;
-            // // debug.add(myText);
-        }
-    }
-
-    // TODO: Make sure the distance is correct
-    // Iterate till the distance is correct
-    public getShapeDEV2(
-        newPoint: THREE.Vector2,
-        oldPoint: THREE.Vector2,
-        direction: THREE.Vector2,
-        distance = 3,
-        tolerance = 0.1,
-    ) {
-        const { tunnelHeight } = this;
-
-        const offset = new THREE.Vector2(
-            0,
-            // +Y is internally offset
-            tunnelHeight / 2,
-        );
-
-        // Interpolate points
-        const interpolatedPoints = this.stickInterpolatedPoints;
-
-        let distanceBetweenPoints = Infinity;
-
-        let closetsPointInWorld = new THREE.Vector2();
-        let conditionMet = false;
-        let whileIndex = 0;
-        while (conditionMet === false) {
-            whileIndex++;
-            if (whileIndex > 1_000) conditionMet = true;
-
-            // Convert to local space
-            const myPointInLocal = newPoint.clone().sub(offset);
-            const closetsPointInLocal = this._findClosestPoint(interpolatedPoints, myPointInLocal);
-
-            // Convert back
-            closetsPointInWorld = closetsPointInLocal.clone();
-            closetsPointInWorld.x += offset.x;
-            closetsPointInWorld.y += offset.y;
-
-            // Check distance, e.g 2.7
-            distanceBetweenPoints = oldPoint.distanceTo(closetsPointInWorld);
-
-            // 2.7 < 3 - 0.1 = 2.9
-            if (distanceBetweenPoints < distance - tolerance) {
-                newPoint.add(direction.clone().multiplyScalar(tolerance));
-                // console.log('too close');
-            } else if (distanceBetweenPoints > distance + tolerance) {
-                newPoint.add(direction.clone().multiplyScalar(-tolerance));
-                // console.log('too far');
-            } else {
-                // console.log(distanceBetweenPoints);
-                conditionMet = true;
-                // console.log('just right');
+                const clone = cube.clone();
+                clone.position.set(element.x, element.y, position);
             }
         }
-
-        // console.log(distanceBetweenPoints, whileIndex);
-
-        // Add debug point
-        // const geometry = new THREE.BoxGeometry(1, 1, 1);
-        // const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        // const cube = new THREE.Mesh(geometry, material);
-        // cube.position.set(closetsPointInWorld.x, closetsPointInWorld.y, 0);
-
-        // this.add(cube);
-
-        const config = {
-            topLeft: false,
-            topRight: false,
-            bottomLeft: false,
-            bottomRight: false,
-        };
-
-        const { x, y } = closetsPointInWorld;
-        if (x == 10 && y == 10) {
-            config.topLeft = true;
-        } else if (x == 10 && y == 0) {
-            config.bottomLeft = true;
-        } else if (x == -10 && y == 0) {
-            config.bottomRight = true;
-        } else if (x == -10 && y == 10) {
-            config.topRight = true;
-        }
-
-        return { closetsPointInWorld, config };
     }
 
+    /**
+     * Update the position of the grout.
+     * @param grout Grout to be updated
+     * @param _h Height of the grout perpendicular to the tunnel's roof (unused)
+     * @param l  Length of the tunnel
+     * @param point Position of the grout at the spread (!)
+     * @param stickDistance Distance, in +Y, between each grout
+     * @returns
+     */
     public mockDoStick(
-        spread: Grout3D,
-        h: number,
+        grout: Grout3D,
+        _h: number,
         l: number,
         point: THREE.Vector2,
         stickDistance = 3,
     ) {
         const newMockStickPosition = this.mockGetStick(point, stickDistance);
         if (newMockStickPosition == null) return;
-        // THIS IS YOUR NEW PLACE TO BE
-        spread.position.x = newMockStickPosition.point.x;
-        spread.position.y = newMockStickPosition.point.y;
-        spread.position.z = l;
-        const { holeLength } = spread;
 
-        const { tunnelHeight, tunnelRoofHeight } = this;
+        // This is the position at the end of the stick!
+        grout.position.x = newMockStickPosition.point.x;
+        grout.position.y = newMockStickPosition.point.y;
+        grout.position.z = l;
 
-        // const positionAtTunnel = new THREE.Vector2(spread.position.x, spread.position.y - h);
-        const positionAtTunnel = new THREE.Vector2(
-            newMockStickPosition.point.x,
-            newMockStickPosition.point.y,
-        );
+        // Now, go back to the tunnel and find the point at the tunnel shape
+        let newPointAtTunnelShape: PointAlongShape | null = null;
 
-        // console.log(spread.position.y, tunnelHeight);
+        const pointsAroundTunnel2D = this.interpolatedPoints2D;
 
-        //  Top;
-        // if (spread.position.y > 0) {
-        //     positionAtTunnel.y -= h;
-        // }
-        // //  Bottom
-        // if (spread.position.y < 0) {
-        //     positionAtTunnel.y += h;
-        // }
-        // // left
-        // if (spread.position.x > this.tunnelWidth / 2) {
-        //     positionAtTunnel.x -= h;
-        // }
-        // // right
-        // if (spread.position.x < -this.tunnelWidth / 2) {
-        //     positionAtTunnel.x += h;
-        // }
-
-        let pointAtShape: PointAlongShape | null = null;
-
-        const pointsAroundTunnel3D = evenlyInterpolateShape(this._shape);
-
-        const pointsAroundTunnel2D: THREE.Vector2[] = [];
-        pointsAroundTunnel3D.forEach((point) => {
-            point.y += this.tunnelHeight / 2;
-
-            pointsAroundTunnel2D.push(new THREE.Vector2(point.x, point.y));
-        });
-
-        // console.log('X:', spread.position.x);
-
-        for (let i = 0; i < pointsAroundTunnel3D.length; i++) {
-            const element = pointsAroundTunnel3D[i];
-
-            const clone = cube.clone();
-            clone.position.set(element.x, element.y, 0);
-            // HERE I AM?
-            // debug.add(clone);
+        // Debug
+        {
+            // for (let i = 0; i < pointsAroundTunnel3D.length; i++) {
+            //     const element = pointsAroundTunnel3D[i];
+            //     const clone = cube.clone();
+            //     clone.position.set(element.x, element.y, 0);
+            //     // HERE I AM?
+            //     // debug.add(clone);
+            // }
         }
 
+        // Determine if clockwise or counter-clockwise
+        // This will affect the look of the grouts
+        // They will either point inwards or outwards
         let clockwise: boolean = true;
 
         // Top mid -> Bottom right
-        if (spread.position.x < 0 && spread.position.y > this.tunnelHeight / 2) {
+        if (grout.position.x < 0 && grout.position.y > this.tunnelHeight / 2) {
             clockwise = true;
         }
 
         // Bottom mid -> Bottom right
-        if (spread.position.x < 0 && spread.position.y < this.tunnelHeight / 2) {
+        if (grout.position.x < 0 && grout.position.y < this.tunnelHeight / 2) {
             clockwise = false;
         }
 
         // Bottom mid -> Bottom left
-        if (spread.position.x > 0 && spread.position.y < this.tunnelHeight / 2) {
+        if (grout.position.x > 0 && grout.position.y < this.tunnelHeight / 2) {
             clockwise = true;
         }
 
         if (
             // Top right corner
-            spread.position.x < -this.tunnelWidth / 2 &&
-            spread.position.y > this.tunnelHeight / 2
+            grout.position.x < -this.tunnelWidth / 2 &&
+            grout.position.y > this.tunnelHeight / 2
         ) {
             clockwise = true;
         }
         if (
             // Bottom right corner
-            spread.position.x < -this.tunnelWidth / 2 &&
-            spread.position.y < this.tunnelHeight / 2
+            grout.position.x < -this.tunnelWidth / 2 &&
+            grout.position.y < this.tunnelHeight / 2
         ) {
             clockwise = false;
             // return;
@@ -733,125 +475,80 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
         if (
             // Top left corner
-            spread.position.x > 0 &&
-            spread.position.y > this.tunnelHeight / 2
+            grout.position.x > 0 &&
+            grout.position.y > this.tunnelHeight / 2
         ) {
             clockwise = false;
         }
         if (
             // Bottom left corner
-            spread.position.x > 0 &&
-            spread.position.y < this.tunnelHeight / 2
+            grout.position.x > 0 &&
+            grout.position.y < this.tunnelHeight / 2
         ) {
             clockwise = true;
         }
 
-        // REGULAR;
-        {
-            const max1 = pointsAroundTunnel2D.length;
-            const max2 = this.stickInterpolatedPoints.length;
+        // Attempt to find the corresponding index at the tunnel shape.
+        const max1 = pointsAroundTunnel2D.length;
+        const max2 = this.stickInterpolatedPoints.length;
 
-            const adjustedIndex = Math.round((newMockStickPosition.index / max2) * max1);
+        // Use percentage to figure out the new index
+        const adjustedIndex = Math.round((newMockStickPosition.index / max2) * max1);
+        const samplePointAtTunnel = pointsAroundTunnel2D[adjustedIndex];
 
-            const dummy = pointsAroundTunnel2D[adjustedIndex];
-            if (dummy) {
-                const clone1 = cube.clone();
-                clone1.position.set(dummy.x, dummy.y, 0);
+        // Find the new point at the tunnel shape
+        newPointAtTunnelShape = this.mockGetPointAtShape(
+            pointsAroundTunnel2D,
+            clockwise,
+            1,
+            samplePointAtTunnel,
+        );
 
-                const clone2 = cube.clone();
-                clone2.position.set(newMockStickPosition.point.x, newMockStickPosition.point.y, 0);
-
-                // debug.add(clone1);
-                // debug.add(clone2);
-            } else {
-                console.log('INDEX ??', adjustedIndex);
-
-                return;
-            }
-
-            pointAtShape = this.mockGetPointAtShape(pointsAroundTunnel2D, clockwise, 1, dummy);
-
-            if (pointAtShape == null) {
-                console.error("Can't find point");
-                return;
-            }
-            spread.lookAt(pointAtShape.point.x, pointAtShape.point.y, 0);
+        if (newPointAtTunnelShape == null) {
+            console.error("Can't find point");
+            return;
         }
 
-        // WHILE TEST
-        {
-            // let whileIndex = 0;
-            // let tolerance = 10;
-            // let conditionMet = false;
-            // let whilePoint: THREE.Vector2 | PointAlongShape = positionAtTunnel;
-            // while (conditionMet === false) {
-            //     whileIndex++;
-            //     if (whileIndex > 1_000) {
-            //         conditionMet = true;
-            //         console.error('Endless while loop');
-            //         return;
-            //     }
-            //     pointAtShape = this.mockGetPointAtShape(
-            //         pointsAroundTunnel2D,
-            //         clockwise,
-            //         tolerance,
-            //         whilePoint,
-            //     );
-            //     if (pointAtShape == null) {
-            //         console.error("Can't find point");
-            //         return;
-            //     }
-            //     const distance = spread.position.distanceTo(
-            //         new THREE.Vector3(pointAtShape.point.x, pointAtShape.point.y, 0),
-            //     );
-            //     const diff = Math.abs(distance - holeLength);
-            //     if (diff < 1) {
-            //         conditionMet = true;
-            //         console.log('FOUND');
-            //         whilePoint = pointAtShape;
-            //         break;
-            //     }
-            //     whilePoint = pointAtShape;
-            //     tolerance -= 0.1;
-            //     if (tolerance < 1) {
-            //         tolerance = 1;
-            //         return;
-            //     }
-            // }
-            // console.log(whilePoint);
-            // if (whilePoint.point == null) return;
-            // spread.lookAt(whilePoint.point.x, whilePoint.point.y, 0);
-        }
+        // If found, simply look at it
+        grout.lookAt(newPointAtTunnelShape.point.x, newPointAtTunnelShape.point.y, 0);
     }
+
+    /**
+     * Given a approximate point at the stick, attempt to find the corresponding point at along the interpolated stick shape.
+     * @param point Approximate point at the stick
+     * @param stickDistance Distance, in +Y, between each grout
+     * @returns Point along the stick shape, if found
+     */
     public mockGetStick(point: THREE.Vector2, stickDistance = 3): PointAlongShape | null {
+        const tolerance = 1;
+        // Get initial point at the stick shape
         const startingPointAtShape = this.mockGetPointAtShape(
             this.stickInterpolatedPoints,
             false,
-            1,
+            tolerance,
             point,
         );
         if (startingPointAtShape == null) throw new Error("Can't find starting point");
 
+        // This point might be off.
         let newPointAtShape = { ...startingPointAtShape };
         let conditionMet = false;
         let whileIndex = 0;
 
+        // We need to find a point that satisfies the stickDistance.
+        // If not found, simply look at the next point (by incrementing the index)
         while (conditionMet === false) {
             whileIndex++;
             if (whileIndex > 1_000) {
-                conditionMet = true;
                 console.error('Endless while loop');
+                conditionMet = true;
                 return null;
             }
-
-            // Increase or decrease?
-            // newPointAtShape.index++;
-            newPointAtShape.index++;
 
             const newPointAtShapeToCompare = this.mockGetPointAtShape(
                 this.stickInterpolatedPoints,
                 false,
-                1,
+                tolerance,
                 newPointAtShape,
             );
             if (newPointAtShapeToCompare == null) {
@@ -861,11 +558,13 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
             const distance = startingPointAtShape.point.distanceTo(newPointAtShapeToCompare.point);
             if (distance > stickDistance) {
                 conditionMet = true;
-                // console.log('FOUND');
                 break;
             }
 
             newPointAtShape = newPointAtShapeToCompare;
+
+            // Look at the next point
+            newPointAtShape.index++;
         }
 
         return newPointAtShape;
@@ -873,6 +572,14 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
     public mock() {}
 
+    /**
+     * Given a array of points, attempt to find the closest point to the starting point.
+     * @param points Points along the shape
+     * @param clockwise Clockwise or counter-clockwise index search
+     * @param threshold Distance threshold in meters
+     * @param startingPoint Starting point to help the search algorithm
+     * @returns Point along the shape, if found
+     */
     public mockGetPointAtShape(
         points: THREE.Vector2[],
         clockwise: boolean = true,
@@ -888,21 +595,19 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         let conditionMet = false;
         let whileIndex = 0;
 
-        const startPoint = startingPoint?.point ?? startingPoint;
-        let startIndex = startingPoint?.index ?? 0;
+        const startPoint =
+            (startingPoint as Partial<PointAlongShape>)?.point ?? (startingPoint as THREE.Vector2);
+        let startIndex = (startingPoint as Partial<PointAlongShape>)?.index ?? 0;
         const maxSearchIndex = pointsAlongShape.length - 1;
 
+        // NB: Something is wrong here
         if (startIndex > maxSearchIndex) {
-            // startInd ex = startIndex - maxSearchIndex;
             startIndex = 0;
-
-            // return null;
-            // return null;
         }
 
         let searchIndex = startIndex;
 
-        // TODO: Makse sure this is counter clockwise
+        // Search along the `pointsAlongShape` array to find the closest point
         while (conditionMet === false) {
             whileIndex++;
             if (whileIndex > 10_000) {
@@ -914,38 +619,35 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
             const pointAlongShapeToCompare = pointsAlongShape[searchIndex];
 
+            // NB: Something is wrong here:
             if (pointAlongShapeToCompare?.point == null) {
                 console.log('null point');
                 // console.log('searchIndex', searchIndex);
                 // console.log('startIndex', startIndex);
                 // console.log('maxSearchIndex', maxSearchIndex
 
-                const debug = {
-                    searchIndex,
-                    startIndex,
-                    maxSearchIndex,
-                };
+                // const debug = {
+                //     searchIndex,
+                //     startIndex,
+                //     maxSearchIndex,
+                // };
 
-                console.log(debug);
-                console.log(startingPoint?.index);
-
-                // clockwise ? searchIndex++ : searchIndex--;
                 return null;
             }
 
-            // console.log(pointAlongShapeToCompare.point.x, pointAlongShapeToCompare.point.y);
-
-            const distance = startPoint.distanceTo(pointAlongShapeToCompare.point);
-
+            // Check if the distance is within the threshold
+            const distance = startPoint.distanceTo(
+                (pointAlongShapeToCompare as PointAlongShape).point,
+            );
             if (distance < threshold) {
                 conditionMet = true;
                 break;
             }
 
-            // Begin by increment or decrement
+            // Begin by increment or decrement the serach index
             clockwise ? searchIndex++ : searchIndex--;
 
-            // Handle end of "array"
+            // Handle the end of the `pointsAlongShape`
             if (clockwise) {
                 if (searchIndex >= maxSearchIndex) searchIndex = 0;
             } else {
@@ -954,8 +656,8 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
             // Check if we are back at the starting point
             if (whileIndex !== 0 && searchIndex === startIndex) {
-                conditionMet = true;
                 console.error('AROUND THE WORLD');
+                conditionMet = true;
                 return null;
             }
         }

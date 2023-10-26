@@ -147,25 +147,10 @@ export default class TunnelControls extends EventDispatcher {
         currentGrout.position.z = newZPosition - currentGrout.overlap;
     }
 
-    private _generateMirroredGrouts() {
-        this._mirror.clear();
-        if (this._tunnel == null) return;
-
-        const mirrorGrouts = this._grouts.map((grout) => {
-            const json = grout.toJSON();
-            const mirror = new Grout3D(this._tunnel!);
-            mirror.fromJSON(json);
-            mirror.rotation.x *= -1;
-
-            mirror.position.z = grout.position.z;
-            mirror.position.y = 0;
-
-            return mirror;
-        });
-
-        this._mirror.add(...mirrorGrouts);
-    }
-
+    /**
+     * Given a spread, generate the grouts around the spread
+     * @returns
+     */
     private _generateSpreadGrouts() {
         // Clear any previous spread
         this._spread.clear();
