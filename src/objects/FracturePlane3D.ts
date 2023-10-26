@@ -43,6 +43,7 @@ export default class FracturePlane3D
         plane.rotation.x = (90 - this.dip) * THREE.MathUtils.DEG2RAD;
 
         plane.position.z = this.xPosition;
+        plane.position.y = this.zPosition;
 
         this.add(plane);
     }

@@ -373,9 +373,18 @@ export default class Viewer {
 
         planeGeometryFolder
             .add(this._plane, 'xPosition', -100, 100)
-            .name('X Position')
+            .name('X Position (along tunnel)')
             .onChange((value: number) => {
                 this._plane.xPosition = value;
+                this._plane.update();
+            })
+            .listen();
+
+        planeGeometryFolder
+            .add(this._plane, 'zPosition', -100, 100)
+            .name('Z Position (up/down)')
+            .onChange((value: number) => {
+                this._plane.zPosition = value;
                 this._plane.update();
             })
             .listen();
