@@ -1,16 +1,10 @@
 import * as THREE from 'three';
-import SpriteText from 'three-spritetext';
 
 import { AbstractObject3D, AbstractTunnel3D, AbstractTunnel3DParams } from '../core';
 
 import Shape from '@doodle3d/clipper-js';
 import { Grout3D } from '..';
 import { disposeMeshGroup } from '../utils/disposeMesh';
-
-type Found = {
-    distance: number;
-    index: number;
-};
 
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -200,125 +194,6 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
     fromJSON(params: AbstractTunnel3D): void {
         Object.assign(this, params);
-    }
-
-    public buildTunnelInterpolation(spanDistance = 3) {
-        const manyPoints = this._shape.getPoints(100);
-
-        let totalDistance = 0;
-        for (let i = 1; i < manyPoints.length; i++) {
-            const prevouisPpoint = manyPoints[i - 1];
-            const currentPoint = manyPoints[i];
-            const distance = prevouisPpoint.distanceTo(currentPoint);
-            totalDistance += distance;
-        }
-
-        const points = this._shape.getPoints(1);
-
-        // return points;
-
-        // Interpolate points
-        const interpolatedPoints: THREE.Vector2[] = [];
-
-        for (let i = 0; i < points.length - 1; i++) {
-            const pointA = points[i];
-            const pointB = points[i + 1];
-
-            // At every spanDistance, add a point
-            const distance = pointA.distanceTo(pointB);
-            let currentDistance = 0;
-
-            while (currentDistance < distance) {
-                const interpolatedPoint = new THREE.Vector2();
-                interpolatedPoint.lerpVectors(pointA, pointB, j / step);
-                interpolatedPoints.push(interpolatedPoint);
-            }
-
-            // const step = distance / spanDistance;
-
-            // for (let j = 0; j < step; j++) {
-            //     const interpolatedPoint = new THREE.Vector2();
-            //     interpolatedPoint.lerpVectors(pointA, pointB, j / step);
-            //     interpolatedPoints.push(interpolatedPoint);
-
-            //     {
-            //         const geometry = new THREE.BoxGeometry(1, 1, 1);
-            //         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-            //         const cube = new THREE.Mesh(geometry, material);
-            //         cube.position.set(
-            //             interpolatedPoint.x,
-            //             interpolatedPoint.y + this.tunnelHeight / 2,
-            //             0,
-            //         );
-            //         this.add(cube);
-            //     }
-            // }
-        }
-    }
-
-    private _generateInterpolatedPoints(
-        additionalPoints = 100,
-        points = this._shape.getPoints(),
-    ): THREE.Vector2[] {
-        // {x: -10, y: -5}
-        // {x: 10, y: -5}
-        // {x: 10, y: 5}
-        // {x: -10, y: 5}
-        // {x: 0, y: 5}
-        // {x: 10, y: 5}
-        // {x: 9.914448613738104, y: 5.391578576660155}
-
-        // return points;
-
-        // Interpolate points
-        const interpolatedPoints: THREE.Vector2[] = [];
-
-        for (let i = 0; i < points.length - 1; i++) {
-            const pointA = points[i];
-            const pointB = points[i + 1];
-
-            const distance = pointA.distanceTo(pointB);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const _step = distance / additionalPoints;
-
-            for (let j = 0; j < additionalPoints; j++) {
-                const interpolatedPoint = new THREE.Vector2();
-                interpolatedPoint.lerpVectors(pointA, pointB, j / additionalPoints);
-                interpolatedPoints.push(interpolatedPoint);
-
-                // {
-                //     const geometry = new THREE.BoxGeometry(1, 1, 1);
-                //     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-                //     const cube = new THREE.Mesh(geometry, material);
-                //     cube.position.set(
-                //         interpolatedPoint.x,
-                //         interpolatedPoint.y + this.tunnelHeight / 2,
-                //         0,
-                //     );
-                //     this.add(cube);
-                // }
-            }
-        }
-        return interpolatedPoints;
-    }
-
-    private _findClosestPoint(points: THREE.Vector2[], myPoint: THREE.Vector2) {
-        const found: Found = {
-            distance: Infinity,
-            index: Infinity,
-        };
-
-        for (let i = 0; i < points.length; i++) {
-            const point = points[i];
-
-            const distance = point.distanceTo(myPoint);
-            if (distance < found.distance) {
-                found.distance = distance;
-                found.index = i;
-            }
-        }
-        const closetsPoint = points[found.index];
-        return closetsPoint;
     }
 
     public buildStick(position: number, stick: number) {

@@ -14,6 +14,9 @@ const material = new THREE.MeshBasicMaterial({
     // blue
     color: 0x0000ff,
 });
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 const cube = new THREE.Mesh(geometry, material);
 
 export default class TunnelControls extends EventDispatcher {
