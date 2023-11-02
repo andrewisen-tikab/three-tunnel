@@ -31,11 +31,20 @@ export type JSONGroutsParams = Pick<
 export type JSONFracturePlaneParams = AbstractFracturePlane3DParams;
 export type JSONControlsParams = AbstractTunnelControlsParams;
 
+export type JSONBackgroundParams = {
+    gridHelperXZVisible: boolean;
+    gridHelperXYVisible: boolean;
+    gridHelperYZVisible: boolean;
+    backgroundColor: number;
+    backgroundOpacity: number;
+};
+
 export type JSONParams = {
     tunnel: JSONTunnelParams;
     grouts: JSONGroutsParams[];
     plane: JSONFracturePlaneParams;
     controls: JSONControlsParams;
+    background: JSONBackgroundParams;
     version: string;
 };
 
@@ -78,11 +87,43 @@ export default class Viewer {
 
     private _plane!: FracturePlane3D;
 
+    fit = () => {
+        this._cameraControls.fitToSphere(this._tunnel, true);
+    };
+
+    private params = {
+        fit: this.fit.bind(this),
+        fitProfile: () => {
+            this._cameraControls.rotateTo(-Math.PI / 2, Math.PI / 2, true);
+            this._cameraControls.fitToBox(this._tunnel, true, {
+                paddingLeft: 1,
+                paddingRight: 1,
+            });
+        },
+        fitCrossSection: () => {
+            this._cameraControls.rotateTo(-Math.PI, Math.PI / 2, true);
+
+            this._cameraControls.fitToBox(this._tunnel, true, {
+                paddingTop: 1,
+                paddingBottom: 1,
+            });
+        },
+        gridHelperXZVisible: true,
+        gridHelperXYVisible: false,
+        gridHelperYZVisible: false,
+        backgroundColor: 0x000000,
+        backgroundOpacity: 0,
+        save: this._save.bind(this),
+        load: this._load.bind(this),
+        saveScreenshot: this._saveScreenshot.bind(this),
+    };
+
     public static get Instance() {
         return this._instance || (this._instance = new this());
     }
 
     init(container: HTMLElement = document.body): void {
+        const params = this.params;
         this._container = container;
 
         this._stats = new Stats();
@@ -148,11 +189,7 @@ export default class Viewer {
         const axesHelper = new THREE.AxesHelper(200);
         this._scene.add(axesHelper);
 
-        const fit = () => {
-            this._cameraControls.fitToSphere(this._tunnel, true);
-        };
-
-        setTimeout(() => fit(), 100);
+        setTimeout(() => this.fit(), 100);
 
         const animate = () => {
             const delta = this._clock.getDelta();
@@ -389,31 +426,6 @@ export default class Viewer {
             })
             .listen();
 
-        const params = {
-            fit,
-            fitProfile: () => {
-                this._cameraControls.rotateTo(-Math.PI / 2, Math.PI / 2, true);
-                this._cameraControls.fitToBox(this._tunnel, true, {
-                    paddingLeft: 1,
-                    paddingRight: 1,
-                });
-            },
-            fitCrossSection: () => {
-                this._cameraControls.rotateTo(-Math.PI, Math.PI / 2, true);
-
-                this._cameraControls.fitToBox(this._tunnel, true, {
-                    paddingTop: 1,
-                    paddingBottom: 1,
-                });
-            },
-            gridHelperXZVisible: true,
-            gridHelperXYVisible: false,
-            gridHelperYZVisible: false,
-            save: this._save.bind(this),
-            load: this._load.bind(this),
-            saveScreenshot: this._saveScreenshot.bind(this),
-        };
-
         const cameraFolder = this._gui.addFolder('Camera').close();
         cameraFolder.add(params, 'fit').name('Zoom to Tunnel');
 
@@ -423,24 +435,44 @@ export default class Viewer {
         viewpointsFolder.add(params, 'fitCrossSection').name('Cross Section (front)');
 
         const appearanceFolder = this._gui.addFolder('Appearance').close();
+
+        appearanceFolder
+            .addColor(params, 'backgroundColor')
+            .name('Background Color')
+            .onChange((value: number) => {
+                this._renderer.setClearColor(value, params.backgroundOpacity);
+            })
+            .listen();
+
+        appearanceFolder
+            .add(params, 'backgroundOpacity', 0, 1, 0.1)
+            .name('Background Color Opacity')
+            .onChange((value: number) => {
+                this._renderer.setClearColor(params.backgroundColor, value);
+            })
+            .listen();
+
         appearanceFolder
             .add(params, 'gridHelperXZVisible')
             .name('Show Grid (XZ)')
             .onChange((value: boolean) => {
                 this._gridHelperXZ.visible = value;
-            });
+            })
+            .listen();
         appearanceFolder
             .add(params, 'gridHelperXYVisible')
             .name('Show Grid (XY)')
             .onChange((value: boolean) => {
                 this._gridHelperXY.visible = value;
-            });
+            })
+            .listen();
         appearanceFolder
             .add(params, 'gridHelperYZVisible')
             .name('Show Grid (YZ)')
             .onChange((value: boolean) => {
                 this._gridHelperYZ.visible = value;
-            });
+            })
+            .listen();
 
         const loadSaveFolder = this._gui.addFolder('Load / Save Settings').close();
         loadSaveFolder.add(params, 'save').name('Save');
@@ -467,11 +499,26 @@ export default class Viewer {
             return { angle, cutDepth, groutColorHEX, holeLength, overlap, screenLength };
         });
 
+        const {
+            gridHelperXZVisible,
+            gridHelperXYVisible,
+            gridHelperYZVisible,
+            backgroundColor,
+            backgroundOpacity,
+        } = this.params;
+
         const object: JSONParams = {
             tunnel: { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX },
             grouts,
             plane: this._plane.toJSON(),
             controls: this.tunnelControls.toJSON(),
+            background: {
+                gridHelperXZVisible,
+                gridHelperXYVisible,
+                gridHelperYZVisible,
+                backgroundColor,
+                backgroundOpacity,
+            },
             version: VERSION,
         };
 
@@ -485,6 +532,7 @@ export default class Viewer {
         this._fromJSONGrouts(json);
         this._fromJSONFracturePlane(json);
         this._fromJSONControls(json);
+        this._fromJSONBackground(json);
     }
 
     private _checkVersion(json: JSONParams): void {
@@ -528,6 +576,29 @@ export default class Viewer {
     private _fromJSONControls(json: JSONParams): void {
         const { controls } = json;
         this.tunnelControls.fromJSON(controls);
+    }
+
+    private _fromJSONBackground(json: JSONParams): void {
+        const { background } = json;
+        const {
+            gridHelperXZVisible,
+            gridHelperXYVisible,
+            gridHelperYZVisible,
+            backgroundColor,
+            backgroundOpacity,
+        } = background;
+
+        this.params.gridHelperXZVisible = gridHelperXZVisible;
+        this.params.gridHelperXYVisible = gridHelperXYVisible;
+        this.params.gridHelperYZVisible = gridHelperYZVisible;
+        this.params.backgroundColor = backgroundColor;
+        this.params.backgroundOpacity = backgroundOpacity;
+
+        this._gridHelperXY.visible = gridHelperXYVisible;
+        this._gridHelperXZ.visible = gridHelperXZVisible;
+        this._gridHelperYZ.visible = gridHelperYZVisible;
+
+        this._renderer.setClearColor(backgroundColor, backgroundOpacity);
     }
 
     private _save(): void {
