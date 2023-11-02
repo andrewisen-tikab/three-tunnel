@@ -66,6 +66,12 @@ export type AbstractGrout3D = {
      */
     isGrout3D: boolean;
     /**
+     * Whether the grout is visible or not.
+     *
+     * N.B: Don't use the `visible` property from `Object3D` as it's used for internal purposes.
+     */
+    isVisible: boolean;
+    /**
      * Measured at the given angle.
      *
      * This is the hypotenuse if you study the geometry in 2D.
@@ -112,7 +118,7 @@ export type AbstractGrout3D = {
  */
 export type AbstractGrout3DParams = Pick<
     AbstractGrout3D,
-    'holeLength' | 'angle' | 'cutDepth' | 'groutColorHEX' | 'overlap'
+    'holeLength' | 'angle' | 'cutDepth' | 'groutColorHEX' | 'overlap' | 'isVisible'
 >;
 
 /**

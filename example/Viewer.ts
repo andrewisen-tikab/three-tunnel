@@ -25,7 +25,7 @@ export type JSONTunnelParams = Pick<
 
 export type JSONGroutsParams = Pick<
     AbstractGrout3D,
-    'angle' | 'cutDepth' | 'holeLength' | 'overlap' | 'groutColorHEX' | 'screenLength'
+    'angle' | 'cutDepth' | 'holeLength' | 'overlap' | 'groutColorHEX' | 'screenLength' | 'isVisible'
 >;
 
 export type JSONFracturePlaneParams = AbstractFracturePlane3DParams;
@@ -278,7 +278,8 @@ export default class Viewer {
             .name('Visible')
             .onChange((value: boolean) => {
                 if (this._grout1 == null) return;
-                this._grout1.visible = value;
+                this._grout1.isVisible = value;
+                this.tunnelControls.update();
             });
         grout1Folder
             .add(grout1Params, 'angle', 1, 20, 1)
@@ -312,8 +313,9 @@ export default class Viewer {
             .add(grout2Params, 'visible')
             .name('Visible')
             .onChange((value: boolean) => {
-                if (this._grout1 == null) return;
-                this._grout2.visible = value;
+                if (this._grout2 == null) return;
+                this._grout2.isVisible = value;
+                this.tunnelControls.update();
             });
 
         const angle2 = grout2Folder
@@ -495,8 +497,9 @@ export default class Viewer {
         const { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX } = this._tunnel;
 
         const grouts: JSONGroutsParams[] = this.tunnelControls.getGrouts().map((grout) => {
-            const { angle, cutDepth, groutColorHEX, holeLength, overlap, screenLength } = grout;
-            return { angle, cutDepth, groutColorHEX, holeLength, overlap, screenLength };
+            const { isVisible, angle, cutDepth, groutColorHEX, holeLength, overlap, screenLength } =
+                grout;
+            return { isVisible, angle, cutDepth, groutColorHEX, holeLength, overlap, screenLength };
         });
 
         const {

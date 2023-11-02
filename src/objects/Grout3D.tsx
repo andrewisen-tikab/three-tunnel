@@ -8,6 +8,8 @@ import Tunnel3D from './Tunnel3D';
 export default class Grout3D extends THREE.Object3D implements AbstractGrout3D, AbstractObject3D {
     public isGrout3D: boolean = true;
 
+    public isVisible: boolean;
+
     public order: number = -1;
 
     public screenLength: number = 1;
@@ -32,6 +34,7 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D, 
 
     constructor(tunnel: Tunnel3D, params?: AbstractGrout3DParams) {
         super();
+        this.isVisible = true;
         this._tunnel = tunnel;
         if (params) this._params = params;
         this._build();
@@ -61,8 +64,9 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D, 
     }
 
     public toJSON(): AbstractGrout3DParams {
-        const { angle, cutDepth, groutColorHEX, holeLength, overlap } = this;
+        const { isVisible, angle, cutDepth, groutColorHEX, holeLength, overlap } = this;
         const object: AbstractGrout3DParams = {
+            isVisible,
             angle,
             cutDepth,
             groutColorHEX,
