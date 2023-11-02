@@ -42,7 +42,7 @@ export type JSONBackgroundParams = {
 export type JSONParams = {
     tunnel: JSONTunnelParams;
     grouts: JSONGroutsParams[];
-    plane: JSONFracturePlaneParams;
+    planes: JSONFracturePlaneParams[];
     controls: JSONControlsParams;
     background: JSONBackgroundParams;
     version: string;
@@ -85,7 +85,9 @@ export default class Viewer {
 
     private _grout2!: Grout3D;
 
-    private _plane!: FracturePlane3D;
+    // private _plane!: FracturePlane3D;
+
+    private _planes!: FracturePlane3D[];
 
     fit = () => {
         this._cameraControls.fitToSphere(this._tunnel, true);
@@ -359,74 +361,88 @@ export default class Viewer {
 
         updateGroutFolder(this.tunnelControls.groupGrouts);
 
-        const planeFolder = this._gui.addFolder('Plane').close();
-        const planeAppearanceFolder = planeFolder.addFolder('Appearance');
-        const planeGeometryFolder = planeFolder.addFolder('Geometry');
+        const planesFolder = this._gui.addFolder('Planes').close();
 
-        this._plane = new FracturePlane3D();
-        this._group.add(this._plane);
+        const numberOfPlanes = 5;
+        this._planes = [];
 
-        planeAppearanceFolder
-            .add(this._plane, 'visible')
-            .name('Visible')
-            .onChange((value: boolean) => {
-                this._plane.visible = value;
-            })
-            .listen();
+        for (let i = 0; i < numberOfPlanes; i++) {
+            const plane = new FracturePlane3D();
+            this._group.add(plane);
+            this._planes.push(plane);
+        }
 
-        planeGeometryFolder
-            .add(this._plane, 'strike', 0, 360, 1)
-            .name('Strike (degrees)')
-            .onChange((value: number) => {
-                this._plane.strike = value;
-                this._plane.update();
-            })
-            .listen();
+        this._planes.forEach((plane, index) => {
+            const planeFolder = planesFolder.addFolder(`${index + 1}#`).close();
+            const planeAppearanceFolder = planeFolder.addFolder('Appearance');
+            const planeGeometryFolder = planeFolder.addFolder('Geometry');
 
-        planeGeometryFolder
-            .add(this._plane, 'dip', 0, 90, 1)
-            .name('Dip (degrees)')
-            .onChange((value: number) => {
-                this._plane.dip = value;
-                this._plane.update();
-            })
-            .listen();
+            if (index !== 0) {
+                plane.visible = false;
+            }
 
-        planeAppearanceFolder
-            .addColor(this._plane, 'planeColorHEX')
-            .name('Color')
-            .onChange((value: number) => {
-                this._plane.planeColorHEX = value;
-                this._plane.update();
-            })
-            .listen();
+            planeAppearanceFolder
+                .add(plane, 'visible')
+                .name('Visible')
+                .onChange((value: boolean) => {
+                    plane.visible = value;
+                })
+                .listen();
 
-        planeAppearanceFolder
-            .add(this._plane, 'opacity', 0, 1, 0.01)
-            .name('Opacity')
-            .onChange((value: number) => {
-                this._plane.opacity = value;
-                this._plane.update();
-            })
-            .listen();
+            planeGeometryFolder
+                .add(plane, 'strike', 0, 360, 1)
+                .name('Strike (degrees)')
+                .onChange((value: number) => {
+                    plane.strike = value;
+                    plane.update();
+                })
+                .listen();
 
-        planeGeometryFolder
-            .add(this._plane, 'xPosition', -100, 100)
-            .name('X Position (along tunnel)')
-            .onChange((value: number) => {
-                this._plane.xPosition = value;
-                this._plane.update();
-            })
-            .listen();
+            planeGeometryFolder
+                .add(plane, 'dip', 0, 90, 1)
+                .name('Dip (degrees)')
+                .onChange((value: number) => {
+                    plane.dip = value;
+                    plane.update();
+                })
+                .listen();
 
-        planeGeometryFolder
-            .add(this._plane, 'zPosition', -100, 100)
-            .name('Z Position (up/down)')
-            .onChange((value: number) => {
-                this._plane.zPosition = value;
-                this._plane.update();
-            })
-            .listen();
+            planeAppearanceFolder
+                .addColor(plane, 'planeColorHEX')
+                .name('Color')
+                .onChange((value: number) => {
+                    plane.planeColorHEX = value;
+                    plane.update();
+                })
+                .listen();
+
+            planeAppearanceFolder
+                .add(plane, 'opacity', 0, 1, 0.01)
+                .name('Opacity')
+                .onChange((value: number) => {
+                    plane.opacity = value;
+                    plane.update();
+                })
+                .listen();
+
+            planeGeometryFolder
+                .add(plane, 'xPosition', -100, 100)
+                .name('X Position (along tunnel)')
+                .onChange((value: number) => {
+                    plane.xPosition = value;
+                    plane.update();
+                })
+                .listen();
+
+            planeGeometryFolder
+                .add(plane, 'zPosition', -100, 100)
+                .name('Z Position (up/down)')
+                .onChange((value: number) => {
+                    plane.zPosition = value;
+                    plane.update();
+                })
+                .listen();
+        });
 
         const cameraFolder = this._gui.addFolder('Camera').close();
         cameraFolder.add(params, 'fit').name('Zoom to Tunnel');
@@ -513,7 +529,7 @@ export default class Viewer {
         const object: JSONParams = {
             tunnel: { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX },
             grouts,
-            plane: this._plane.toJSON(),
+            planes: this._planes.map((plane) => plane.toJSON()),
             controls: this.tunnelControls.toJSON(),
             background: {
                 gridHelperXZVisible,
@@ -572,8 +588,14 @@ export default class Viewer {
     }
 
     private _fromJSONFracturePlane(json: JSONParams): void {
-        const { plane } = json;
-        this._plane.fromJSON(plane);
+        const { planes } = json;
+
+        for (let i = 0; i < planes.length; i++) {
+            const element = planes[i];
+            const plane = this._planes[i];
+            if (plane == null) continue;
+            plane.fromJSON(element);
+        }
     }
 
     private _fromJSONControls(json: JSONParams): void {
