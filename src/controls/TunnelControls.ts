@@ -156,6 +156,8 @@ export default class TunnelControls extends EventDispatcher {
         for (let i = 0; i < this._grouts.length; i++) {
             const element = this._grouts[i];
 
+            if (element.isVisible === false) continue;
+
             this._generateSpreadGrout(element);
         }
     }
