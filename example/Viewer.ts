@@ -435,6 +435,15 @@ export default class Viewer {
                 .listen();
 
             planeGeometryFolder
+                .add(plane, 'yPosition', -100, 100)
+                .name('Y Position (sideways)')
+                .onChange((value: number) => {
+                    plane.yPosition = value;
+                    plane.update();
+                })
+                .listen();
+
+            planeGeometryFolder
                 .add(plane, 'zPosition', -100, 100)
                 .name('Z Position (up/down)')
                 .onChange((value: number) => {

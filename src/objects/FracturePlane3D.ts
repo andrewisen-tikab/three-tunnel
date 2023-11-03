@@ -12,6 +12,8 @@ export default class FracturePlane3D
 
     public xPosition: number;
 
+    public yPosition: number;
+
     public zPosition: number;
 
     public strike: number;
@@ -25,6 +27,7 @@ export default class FracturePlane3D
     constructor() {
         super();
         this.xPosition = 0;
+        this.yPosition = 0;
         this.zPosition = 0;
         this.strike = 0;
         this.dip = 0;
@@ -45,6 +48,7 @@ export default class FracturePlane3D
         const plane = new THREE.Mesh(geometry, material);
         plane.visible = this.visible;
 
+        plane.position.x = this.yPosition;
         plane.position.z = this.xPosition;
         plane.position.y = this.zPosition;
 
@@ -59,10 +63,12 @@ export default class FracturePlane3D
     }
 
     public toJSON(): AbstractFracturePlane3DParams {
-        const { visible, xPosition, zPosition, strike, dip, opacity, planeColorHEX } = this;
+        const { visible, xPosition, yPosition, zPosition, strike, dip, opacity, planeColorHEX } =
+            this;
         const object: AbstractFracturePlane3DParams = {
             visible,
             xPosition,
+            yPosition,
             zPosition,
             strike,
             dip,

@@ -138,6 +138,10 @@ export type AbstractFracturePlane3D = {
      */
     xPosition: number;
     /**
+     * Position along the positive x-axis.
+     */
+    yPosition: number;
+    /**
      * Position along the positive y-axis.
      */
     zPosition: number;
