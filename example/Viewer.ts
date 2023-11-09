@@ -211,8 +211,7 @@ export default class Viewer {
             .onChange((value: number) => {
                 this.tunnelControls.setTunnelParams({ tunnelLength: value });
             })
-            .listen()
-            .disable();
+            .listen();
 
         tunnelFolder
             .add(this._tunnel, 'tunnelWidth', 1, 30)
