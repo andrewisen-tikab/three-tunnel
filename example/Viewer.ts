@@ -20,7 +20,7 @@ CameraControls.install({ THREE });
 
 export type JSONTunnelParams = Pick<
     AbstractTunnel3D,
-    'tunnelHeight' | 'tunnelRoofHeight' | 'tunnelWidth' | 'tunnelColorHEX'
+    'tunnelLength' | 'tunnelHeight' | 'tunnelRoofHeight' | 'tunnelWidth' | 'tunnelColorHEX'
 >;
 
 export type JSONGroutsParams = Pick<
@@ -518,7 +518,8 @@ export default class Viewer {
     }
 
     public toJSON(): JSONParams {
-        const { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX } = this._tunnel;
+        const { tunnelLength, tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX } =
+            this._tunnel;
 
         const grouts: JSONGroutsParams[] = this.tunnelControls.getGrouts().map((grout) => {
             const { isVisible, angle, cutDepth, groutColorHEX, holeLength, overlap, screenLength } =
@@ -535,7 +536,7 @@ export default class Viewer {
         } = this.params;
 
         const object: JSONParams = {
-            tunnel: { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX },
+            tunnel: { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX, tunnelLength },
             grouts,
             planes: this._planes.map((plane) => plane.toJSON()),
             controls: this.tunnelControls.toJSON(),
@@ -573,10 +574,11 @@ export default class Viewer {
 
     private _fromJSONTunnel(json: JSONParams): void {
         const {
-            tunnel: { tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX },
+            tunnel: { tunnelLength, tunnelHeight, tunnelRoofHeight, tunnelWidth, tunnelColorHEX },
         } = json;
 
         this.tunnelControls.setTunnelParams({
+            tunnelLength,
             tunnelHeight,
             tunnelRoofHeight,
             tunnelWidth,
