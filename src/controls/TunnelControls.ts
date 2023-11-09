@@ -186,7 +186,7 @@ export default class TunnelControls extends EventDispatcher {
         while (conditionMet === false) {
             // Safety check
             whileIndex++;
-            if (whileIndex > 30) {
+            if (whileIndex > 100) {
                 conditionMet = true;
                 break;
             }

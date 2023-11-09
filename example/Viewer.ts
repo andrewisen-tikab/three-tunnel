@@ -223,7 +223,7 @@ export default class Viewer {
             .listen();
 
         tunnelFolder
-            .add(this._tunnel, 'tunnelHeight', 1, 20)
+            .add(this._tunnel, 'tunnelHeight', 1, 100)
             .name('Height [H] (m)')
             .onChange((value: number) => {
                 this.tunnelControls.setTunnelParams({ tunnelHeight: value });
