@@ -1,6 +1,6 @@
 {
     "name": "three-tunnel",
-    "version": "0.0.16",
+    "version": "0.0.17",
     "type": "module",
     "main": "dist/three-tunnel.js",
     "scripts": {
