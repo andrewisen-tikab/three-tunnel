@@ -1,7 +1,8 @@
 # three-tunnel
 
 `three-tunnel` is a tunnel & grouting library for [three.js](https://threejs.org/).
-It's purpose is to help rock engineers to design grouts.
+It's also a part of `Tunnel Sketcher` is a free tool for visualizing geological structures and grouting in tunnels.
+Use parts of this library to create your own tunnel visualization tool.
 
 <img src="https://github.com/andrewisen-tikab/three-tunnel/blob/dev/resources/example.gif?raw=true" width="100%" />
 
