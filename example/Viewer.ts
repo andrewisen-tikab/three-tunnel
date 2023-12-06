@@ -48,6 +48,14 @@ export type JSONParams = {
     version: string;
 };
 
+export type GUIParams = {
+    visible: boolean;
+    angle: number;
+    holeLength: number;
+    overlap: number;
+    groutColorHEX: number;
+};
+
 export default class Viewer {
     private static _instance: Viewer;
 
@@ -258,7 +266,7 @@ export default class Viewer {
         const grout1Folder = groutFolder.addFolder('#1').close();
         const grout2Folder = groutFolder.addFolder('#2').close();
 
-        const grout1Params = {
+        const grout1Params: GUIParams = {
             visible: true,
             angle: 15,
             holeLength: 25,
@@ -266,7 +274,7 @@ export default class Viewer {
             groutColorHEX: 0xff0000,
         };
 
-        const grout2Params = {
+        const grout2Params: GUIParams = {
             visible: true,
             angle: 15,
             holeLength: 25,
@@ -283,7 +291,7 @@ export default class Viewer {
                 this.tunnelControls.update();
             });
         grout1Folder
-            .add(grout1Params, 'angle', 1, 20, 1)
+            .add(grout1Params, 'angle', 1, 90, 1)
             .name('Angle [α] (degrees)')
             .onChange((value: number) => {
                 this.tunnelControls.setGroutParams(0, { angle: value * THREE.MathUtils.DEG2RAD });
@@ -297,7 +305,7 @@ export default class Viewer {
             });
 
         grout1Folder
-            .add(grout1Params, 'overlap', 1, 10)
+            .add(grout1Params, 'overlap', 0, 10)
             .name('Overlap [O] (m)')
             .onChange((value: number) => {
                 this.tunnelControls.setGroutParams(0, { overlap: value });
@@ -333,8 +341,8 @@ export default class Viewer {
                 this.tunnelControls.setGroutParams(1, { holeLength: value });
             });
 
-        grout1Folder
-            .add(grout2Params, 'overlap', 1, 10)
+        grout2Folder
+            .add(grout2Params, 'overlap', 0, 10)
             .name('Overlap [O] (m)')
             .onChange((value: number) => {
                 this.tunnelControls.setGroutParams(1, { overlap: value });
@@ -503,6 +511,19 @@ export default class Viewer {
         const loadSaveFolder = this._gui.addFolder('Load / Save Settings').close();
         loadSaveFolder.add(params, 'save').name('Save');
         loadSaveFolder.add(params, 'load').name('Load');
+
+        // TODO: Fix this
+        // const buildInitialState = (index: number, params: GUIParams) => {
+        //     this.tunnelControls.setGroutParams(index, {
+        //         ...params,
+        //         angle: params.angle * THREE.MathUtils.DEG2RAD,
+        //     });
+        // };
+
+        // buildInitialState(0, grout1Params);
+        // buildInitialState(1, grout2Params);
+
+        this.tunnelControls.update();
 
         animate();
 
