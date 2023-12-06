@@ -289,7 +289,7 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         point: THREE.Vector2,
         stickDistance = 3,
     ) {
-        const tolerance = Math.max(grout.holeLength / 10, 1);
+        const tolerance = Math.max(grout.holeLength / 20, 1);
 
         const newMockStickPosition = this.mockGetStick(point, stickDistance, tolerance);
         if (newMockStickPosition == null) return;
