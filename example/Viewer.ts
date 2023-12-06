@@ -283,7 +283,7 @@ export default class Viewer {
                 this.tunnelControls.update();
             });
         grout1Folder
-            .add(grout1Params, 'angle', 1, 20, 1)
+            .add(grout1Params, 'angle', 1, 90, 1)
             .name('Angle [α] (degrees)')
             .onChange((value: number) => {
                 this.tunnelControls.setGroutParams(0, { angle: value * THREE.MathUtils.DEG2RAD });
