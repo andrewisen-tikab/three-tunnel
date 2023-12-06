@@ -289,7 +289,9 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         point: THREE.Vector2,
         stickDistance = 3,
     ) {
-        const newMockStickPosition = this.mockGetStick(point, stickDistance);
+        const tolerance = Math.max(grout.holeLength / 20, 1);
+
+        const newMockStickPosition = this.mockGetStick(point, stickDistance, tolerance);
         if (newMockStickPosition == null) return;
 
         // This is the position at the end of the stick!
@@ -393,10 +395,15 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
      * Given a approximate point at the stick, attempt to find the corresponding point at along the interpolated stick shape.
      * @param point Approximate point at the stick
      * @param stickDistance Distance, in +Y, between each grout
+     * @param stickDistance Distance, in +Y, between each grout
+     * @param tolerance The distance between the each point along the tunnel's shape
      * @returns Point along the stick shape, if found
      */
-    public mockGetStick(point: THREE.Vector2, stickDistance = 3): PointAlongShape | null {
-        const tolerance = 1;
+    public mockGetStick(
+        point: THREE.Vector2,
+        stickDistance = 3,
+        tolerance: number = 1,
+    ): PointAlongShape | null {
         // Get initial point at the stick shape
         const startingPointAtShape = this.mockGetPointAtShape(
             this.stickInterpolatedPoints,
