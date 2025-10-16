@@ -144,6 +144,9 @@ export default class Viewer {
 		save: this._save.bind(this),
 		load: this._load.bind(this),
 		saveScreenshot: this._saveScreenshot.bind(this),
+		// Dummy checkboxes for hiding sides (no functionality yet)
+		hideProfileLeft: false,
+		hideProfileRight: false,
 	};
 
 	public static get Instance() {
@@ -491,9 +494,11 @@ export default class Viewer {
 		const viewpointsFolder = this._gui.addFolder("Viewpoints");
 
 		viewpointsFolder.add(params, "fitProfile").name("Profile (side - left)");
+		viewpointsFolder.add(params, "hideProfileLeft").name("Hide Left Side");
 		viewpointsFolder
 			.add(params, "fitProfileRight")
 			.name("Profile (side - right)");
+		viewpointsFolder.add(params, "hideProfileRight").name("Hide Right Side");
 		viewpointsFolder
 			.add(params, "fitCrossSection")
 			.name("Cross Section (front)");
