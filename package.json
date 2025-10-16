@@ -58,5 +58,6 @@
     "dependencies": {
         "@doodle3d/clipper-js": "^1.0.11",
         "three-spritetext": "^1.8.1"
-    }
+    },
+    "packageManager": "yarn@4.10.3"
 }
