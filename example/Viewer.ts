@@ -2,6 +2,14 @@ import * as THREE from "three";
 import Stats from "three/addons/libs/stats.module.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 
+import {
+	computeBoundsTree,
+	disposeBoundsTree,
+	computeBatchedBoundsTree,
+	disposeBatchedBoundsTree,
+	acceleratedRaycast,
+} from "three-mesh-bvh";
+
 import CameraControls from "camera-controls";
 
 import { saveAs } from "file-saver";
@@ -17,6 +25,10 @@ import {
 import { VERSION } from "../src/version";
 
 CameraControls.install({ THREE });
+
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 export type JSONTunnelParams = Pick<
 	AbstractTunnel3D,
