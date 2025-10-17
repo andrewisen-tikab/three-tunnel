@@ -970,14 +970,15 @@ export default class Viewer {
 		}
 
 		const planes: THREE.Plane[] = [];
-		// World-space: tunnel extruded along +Z, centered at origin, roof shifted +Y later.
-		// Clip left side (x < 0): keep x >= 0 => plane normal towards -X from origin: new Plane(new Vector3(-1,0,0), 0)
+		// World-space: tunnel centered at origin. THREE.Plane keeps the half-space where normal.dot(point) + constant >= 0.
+		// Original implementation produced the opposite effect (left checkbox hid right side). Swap normals to match UI labels.
+		// Hide left side: remove x < 0, keep x >= 0 => use plane with normal +X so normal.dot(point) >= 0 keeps positive x.
 		if (hideProfileLeft) {
-			planes.push(new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0));
-		}
-		// Clip right side (x > 0): keep x <= 0 => normal +X: new Plane(new Vector3(1,0,0), 0)
-		if (hideProfileRight) {
 			planes.push(new THREE.Plane(new THREE.Vector3(1, 0, 0), 0));
+		}
+		// Hide right side: remove x > 0, keep x <= 0 => use plane with normal -X so normal.dot(point) >= 0 keeps negative x.
+		if (hideProfileRight) {
+			planes.push(new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0));
 		}
 
 		this._tunnel.setClippingPlanes(planes);
