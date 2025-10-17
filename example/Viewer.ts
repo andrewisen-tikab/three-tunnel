@@ -5,10 +5,9 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import {
 	computeBoundsTree,
 	disposeBoundsTree,
-	computeBatchedBoundsTree,
-	disposeBatchedBoundsTree,
 	acceleratedRaycast,
 } from "three-mesh-bvh";
+import { SAH } from "three-mesh-bvh";
 
 import CameraControls from "camera-controls";
 
@@ -78,6 +77,19 @@ export type GUIParams = {
 	groutColorHEX: number;
 };
 
+type BVHTriangle = {
+	intersectsTriangle: (tri: BVHTriangle, edge: THREE.Line3) => boolean;
+};
+interface BoundsTree {
+	bvhcast: (
+		other: BoundsTree,
+		matrix: THREE.Matrix4,
+		callbacks: {
+			intersectsTriangles: (tri1: BVHTriangle, tri2: BVHTriangle) => void;
+		},
+	) => void;
+}
+
 export default class Viewer {
 	private static _instance: Viewer;
 
@@ -118,6 +130,13 @@ export default class Viewer {
 	// private _plane!: FracturePlane3D;
 
 	private _planes!: FracturePlane3D[];
+
+	/** Group that holds intersection line segments between tunnel and fracture planes */
+	private _intersectionGroup: THREE.Group = new THREE.Group();
+	/** Map plane index to its line segment object */
+	private _intersectionLines: Map<number, THREE.LineSegments> = new Map();
+	/** Map plane index to intersection visibility flag */
+	private _intersectionVisible: Map<number, boolean> = new Map();
 
 	fit = () => {
 		this._cameraControls.fitToSphere(this._tunnel, true);
@@ -162,7 +181,8 @@ export default class Viewer {
 	};
 
 	public static get Instance() {
-		return this._instance || (this._instance = new this());
+		if (!Viewer._instance) Viewer._instance = new Viewer();
+		return Viewer._instance;
 	}
 
 	init(container: HTMLElement = document.body): void {
@@ -179,6 +199,7 @@ export default class Viewer {
 		this._scene = new THREE.Scene();
 		this._group = new THREE.Group();
 		this._scene.add(this._group);
+		this._scene.add(this._intersectionGroup);
 
 		const { innerWidth: width, innerHeight: height } = window;
 		this._camera = new THREE.OrthographicCamera(
@@ -242,6 +263,8 @@ export default class Viewer {
 		const animate = () => {
 			const delta = this._clock.getDelta();
 			this._cameraControls.update(delta);
+			// Update intersection results once per frame
+			this._updatePlaneTunnelIntersections();
 
 			requestAnimationFrame(animate);
 
@@ -424,6 +447,22 @@ export default class Viewer {
 			const plane = new FracturePlane3D();
 			this._group.add(plane);
 			this._planes.push(plane);
+			// prepare intersection line object (color matches plane)
+			const lineGeo = new THREE.BufferGeometry();
+			lineGeo.setAttribute(
+				"position",
+				new THREE.BufferAttribute(new Float32Array(0), 3),
+			);
+			const lineMat = new THREE.LineBasicMaterial({
+				color: plane.planeColorHEX,
+				transparent: plane.opacity < 1,
+				opacity: plane.opacity,
+			});
+			const line = new THREE.LineSegments(lineGeo, lineMat);
+			line.visible = false;
+			this._intersectionGroup.add(line);
+			this._intersectionLines.set(i, line);
+			this._intersectionVisible.set(i, true);
 		}
 
 		this._planes.forEach((plane, index) => {
@@ -440,6 +479,21 @@ export default class Viewer {
 				.name("Visible")
 				.onChange((value: boolean) => {
 					plane.visible = value;
+				})
+				.listen();
+
+			// Independent intersection visibility toggle
+			const existingFlag = this._intersectionVisible.get(index);
+			const intersectionParams = {
+				showIntersection: existingFlag === undefined ? true : existingFlag,
+			};
+			planeAppearanceFolder
+				.add(intersectionParams, "showIntersection")
+				.name("Show Intersection")
+				.onChange((value: boolean) => {
+					this._intersectionVisible.set(index, value);
+					const lineObj = this._intersectionLines.get(index);
+					if (lineObj && !value) lineObj.visible = false;
 				})
 				.listen();
 
@@ -795,8 +849,6 @@ export default class Viewer {
 		input.click();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore
 	private _update(): void {
 		this.tunnelControls.update();
 	}
@@ -804,6 +856,102 @@ export default class Viewer {
 	private _render(): void {
 		// if (this.freeze) return;
 		this._renderer.render(this._scene, this._camera);
+	}
+
+	/**
+	 * Compute intersections between each visible fracture plane and the tunnel using BVH bvhcast.
+	 * Generates line segments for triangle-triangle edge intersections similar to example/edgeIntersect.
+	 */
+	private _updatePlaneTunnelIntersections(): void {
+		if (!this._tunnel) return;
+		// Acquire tunnel mesh geometry (first mesh child inside its group)
+		const tunnelMesh = this._tunnel.mesh;
+		if (!tunnelMesh) return;
+		const tunnelGeo = tunnelMesh.geometry as THREE.BufferGeometry & {
+			boundsTree?: BoundsTree;
+			computeBoundsTree?: (options?: { strategy?: unknown }) => void;
+		};
+		// Ensure BVH exists
+		if (!tunnelGeo.boundsTree && tunnelGeo.computeBoundsTree) {
+			tunnelGeo.computeBoundsTree({ strategy: SAH });
+		}
+
+		this._planes.forEach((plane, index) => {
+			const lineObj = this._intersectionLines.get(index);
+			if (!lineObj) return;
+			const showIntersection = this._intersectionVisible.get(index);
+			if (!showIntersection) {
+				lineObj.visible = false;
+				return;
+			}
+			// Access plane mesh
+			const planeMesh = plane.mesh;
+			if (!planeMesh) {
+				lineObj.visible = false;
+				return;
+			}
+			const planeGeo = planeMesh.geometry as THREE.BufferGeometry & {
+				boundsTree?: BoundsTree;
+				computeBoundsTree?: (options?: { strategy?: unknown }) => void;
+			};
+			if (!planeGeo.boundsTree && planeGeo.computeBoundsTree) {
+				planeGeo.computeBoundsTree({ strategy: SAH });
+			}
+
+			// Build matrix transforming plane space to tunnel space
+			const planeToTunnelMatrix = new THREE.Matrix4()
+				.copy(tunnelMesh.matrixWorld)
+				.invert()
+				.multiply(planeMesh.matrixWorld);
+
+			const edge = new THREE.Line3();
+			const results: number[] = [];
+			const tTree = tunnelGeo.boundsTree;
+			const pTree = planeGeo.boundsTree;
+			if (tTree && pTree) {
+				tTree.bvhcast(pTree, planeToTunnelMatrix, {
+					intersectsTriangles(tri1: BVHTriangle, tri2: BVHTriangle) {
+						if (tri1.intersectsTriangle(tri2, edge)) {
+							const { start, end } = edge;
+							results.push(start.x, start.y, start.z, end.x, end.y, end.z);
+						}
+					},
+				});
+			}
+
+			if (results.length) {
+				const geo = lineObj.geometry as THREE.BufferGeometry;
+				const existing = geo.getAttribute("position");
+				if (!existing || existing.array.length < results.length) {
+					geo.setAttribute(
+						"position",
+						new THREE.BufferAttribute(new Float32Array(results), 3, false),
+					);
+				} else {
+					(existing.array as Float32Array).set(results);
+					(existing as THREE.BufferAttribute).needsUpdate = true;
+				}
+				geo.setDrawRange(0, results.length / 3);
+				// Sync line material color & opacity with plane each frame in case user changed GUI.
+				const mat = lineObj.material as THREE.LineBasicMaterial;
+				mat.color.setHex(plane.planeColorHEX);
+				mat.opacity = plane.opacity;
+				mat.transparent = mat.opacity < 1;
+				// Align line object with tunnel world transform so geometry (in tunnel local coords) renders at correct height.
+				const worldPos = new THREE.Vector3();
+				const worldQuat = new THREE.Quaternion();
+				const worldScale = new THREE.Vector3();
+				tunnelMesh.getWorldPosition(worldPos);
+				tunnelMesh.getWorldQuaternion(worldQuat);
+				tunnelMesh.getWorldScale(worldScale);
+				lineObj.position.copy(worldPos);
+				lineObj.quaternion.copy(worldQuat);
+				lineObj.scale.copy(worldScale);
+				lineObj.visible = true;
+			} else {
+				lineObj.visible = false;
+			}
+		});
 	}
 
 	/**

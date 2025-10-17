@@ -5882,7 +5882,7 @@ __metadata:
     file-saver: "npm:^2.0.5"
     react: "npm:^18.2.0"
     react-dom: "npm:^18.2.0"
-    three: "npm:^0.157.0"
+    three: "npm:^0.180.0"
     three-mesh-bvh: "npm:^0.9.1"
     three-spritetext: "npm:^1.8.1"
     typedoc: "npm:^0.25.2"
@@ -5895,10 +5895,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"three@npm:^0.157.0":
-  version: 0.157.0
-  resolution: "three@npm:0.157.0"
-  checksum: 10/07d67bf027efb7d2e5f98a971b795b0993f87b5f50ad5c9a28f9a0172286b943a7debbf0be2efe2bb57e1f19492d878f4a5d7d1eb3d12a7e86ecdc7d10963ba7
+"three@npm:^0.180.0":
+  version: 0.180.0
+  resolution: "three@npm:0.180.0"
+  checksum: 10/91873a9a78a99d948fffd56e5a2369ad9aeaa45c763ba74c260f4af232a4798d9fc7da9528604d2f9b1110683e63737f26313d78b7e42e42b66d11d67e48cba3
   languageName: node
   linkType: hard
 

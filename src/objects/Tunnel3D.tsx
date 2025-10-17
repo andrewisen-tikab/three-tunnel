@@ -89,6 +89,9 @@ export default class Tunnel3D
 	/** Root group that holds the tunnel mesh & edge lines */
 	private _tunnelGroup: THREE.Group | null = null;
 
+	/** Reference to the extruded tunnel mesh for BVH intersection */
+	private _tunnelMesh: THREE.Mesh | null = null;
+
 	/** Currently applied clipping planes */
 	private _clippingPlanes: THREE.Plane[] = [];
 
@@ -179,6 +182,18 @@ export default class Tunnel3D
 			side: THREE.DoubleSide, // show both interior/exterior faces when clipped
 		});
 		const tunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
+		this._tunnelMesh = tunnel;
+		// Build bounds tree for accelerated intersection tests (three-mesh-bvh)
+		if (
+			!("boundsTree" in tunnel.geometry) &&
+			"computeBoundsTree" in tunnel.geometry
+		) {
+			(
+				tunnel.geometry as THREE.BufferGeometry & {
+					computeBoundsTree: () => void;
+				}
+			).computeBoundsTree();
+		}
 
 		group.add(tunnel);
 
@@ -207,6 +222,18 @@ export default class Tunnel3D
 	update(): void {
 		this.clear();
 		this._build();
+		// Rebuild BVH after geometry changes
+		if (this._tunnelMesh) {
+			const geo = this._tunnelMesh.geometry as THREE.BufferGeometry & {
+				boundsTree?: unknown;
+				computeBoundsTree?: () => void;
+				disposeBoundsTree?: () => void;
+			};
+			if (geo.boundsTree && typeof geo.disposeBoundsTree === "function") {
+				geo.disposeBoundsTree();
+			}
+			if (typeof geo.computeBoundsTree === "function") geo.computeBoundsTree();
+		}
 		// Re-apply clipping planes to new meshes after rebuild
 		if (this._tunnelGroup) {
 			const isMesh = (o: THREE.Object3D): o is THREE.Mesh =>
@@ -224,6 +251,11 @@ export default class Tunnel3D
 				else if (material) apply(material);
 			});
 		}
+	}
+
+	/** Access underlying extruded tunnel mesh for intersection queries */
+	public get mesh(): THREE.Mesh | null {
+		return this._tunnelMesh;
 	}
 
 	toJSON() {

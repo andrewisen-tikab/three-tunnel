@@ -50,6 +50,16 @@ Or, you can run the demo at:
 
 Auto-generated docs can be found here:
 [https://andrewisen-tikab.github.io/three-tunnel/docs/](https://andrewisen-tikab.github.io/three-tunnel/docs/)
+## Tunnel / Fracture Plane Edge Intersections
+
+The viewer now computes real-time edge intersection line segments between the extruded `Tunnel3D` geometry and each visible `FracturePlane3D` using `three-mesh-bvh`'s `bvhcast` triangle pair traversal. Intersections appear as magenta line segments. Hiding a fracture plane via its GUI visibility toggle will also hide its intersection lines automatically.
+
+Implementation details:
+- BVH trees are generated for the tunnel and plane geometries when first needed.
+- Each plane gets a dedicated `THREE.LineSegments` buffer updated per frame only when visible.
+- When no intersections exist for a plane its line object is hidden.
+
+This logic lives in `example/Viewer.ts` inside `_updatePlaneTunnelIntersections()`.
 
 ## Status
 
