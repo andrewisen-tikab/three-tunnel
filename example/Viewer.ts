@@ -181,6 +181,8 @@ export default class Viewer {
 		this._renderer = new THREE.WebGLRenderer({
 			preserveDrawingBuffer: true,
 		});
+		// Needed for clipping planes to work
+		this._renderer.localClippingEnabled = true;
 		this._renderer.setSize(window.innerWidth, window.innerHeight);
 		this._renderer.setClearColor(0xffffff, 0);
 
@@ -291,7 +293,7 @@ export default class Viewer {
 		const grout2Folder = groutFolder.addFolder("#2").close();
 
 		const grout1Params: GUIParams = {
-			visible: true,
+			visible: false,
 			angle: 15,
 			holeLength: 25,
 			overlap: 5,
@@ -299,7 +301,7 @@ export default class Viewer {
 		};
 
 		const grout2Params: GUIParams = {
-			visible: true,
+			visible: false,
 			angle: 15,
 			holeLength: 25,
 			overlap: 5,
@@ -314,6 +316,9 @@ export default class Viewer {
 				this._grout1.isVisible = value;
 				this.tunnelControls.update();
 			});
+
+		this._grout1.isVisible = grout1Params.visible;
+
 		grout1Folder
 			.add(grout1Params, "angle", 1, 90, 1)
 			.name("Angle [α] (degrees)")
@@ -352,6 +357,8 @@ export default class Viewer {
 				this._grout2.isVisible = value;
 				this.tunnelControls.update();
 			});
+
+		this._grout2.isVisible = grout2Params.visible;
 
 		const angle2 = grout2Folder
 			.add(grout2Params, "angle", 1, 20, 1)
@@ -494,11 +501,21 @@ export default class Viewer {
 		const viewpointsFolder = this._gui.addFolder("Viewpoints");
 
 		viewpointsFolder.add(params, "fitProfile").name("Profile (side - left)");
-		viewpointsFolder.add(params, "hideProfileLeft").name("Hide Left Side");
+		viewpointsFolder
+			.add(params, "hideProfileLeft")
+			.name("Hide Left Side")
+			.onChange(() => {
+				this._updateTunnelClipping();
+			});
 		viewpointsFolder
 			.add(params, "fitProfileRight")
 			.name("Profile (side - right)");
-		viewpointsFolder.add(params, "hideProfileRight").name("Hide Right Side");
+		viewpointsFolder
+			.add(params, "hideProfileRight")
+			.name("Hide Right Side")
+			.onChange(() => {
+				this._updateTunnelClipping();
+			});
 		viewpointsFolder
 			.add(params, "fitCrossSection")
 			.name("Cross Section (front)");
@@ -777,6 +794,36 @@ export default class Viewer {
 		this._renderer.render(this._scene, this._camera);
 	}
 
+	/**
+	 * Apply clipping planes to the tunnel based on left/right hide checkboxes.
+	 * Hides the left side (x < 0) or right side (x > 0) by applying planar clipping.
+	 * If both are selected, clipping is disabled (shows full tunnel) to avoid empty result.
+	 */
+	private _updateTunnelClipping(): void {
+		if (!this._tunnel) return;
+		const { hideProfileLeft, hideProfileRight } = this.params;
+
+		// If both sides requested hidden, show none clipped for now (could hide all).
+		if (hideProfileLeft && hideProfileRight) {
+			this._tunnel.setClippingPlanes([]);
+			return;
+		}
+
+		const planes: THREE.Plane[] = [];
+		// World-space: tunnel extruded along +Z, centered at origin, roof shifted +Y later.
+		// Clip left side (x < 0): keep x >= 0 => plane normal towards -X from origin: new Plane(new Vector3(-1,0,0), 0)
+		if (hideProfileLeft) {
+			planes.push(new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0));
+		}
+		// Clip right side (x > 0): keep x <= 0 => normal +X: new Plane(new Vector3(1,0,0), 0)
+		if (hideProfileRight) {
+			planes.push(new THREE.Plane(new THREE.Vector3(1, 0, 0), 0));
+		}
+
+		this._tunnel.setClippingPlanes(planes);
+		this._render();
+	}
+
 	private _onWindowResize(): void {
 		this._resize();
 	}
@@ -839,24 +886,26 @@ export default class Viewer {
 
 	private _saveScreenshot() {
 		this._beginHighResolution();
-		this._renderer.domElement.toBlob((blob) => {
-			if (blob == null) {
-				alert("Failed to save screenshot.");
-				return;
-			}
+		this._renderer.domElement.toBlob(
+			(blob) => {
+				if (blob == null) {
+					alert("Failed to save screenshot.");
+					return;
+				}
 
-			const a = document.createElement("a");
-			document.body.appendChild(a);
-			a.style.display = "none";
+				const a = document.createElement("a");
+				document.body.appendChild(a);
+				a.style.display = "none";
 
-			const url = window.URL.createObjectURL(blob);
-			a.href = url;
-			a.download = "screenshot.png";
+				const url = window.URL.createObjectURL(blob);
+				a.href = url;
+				a.download = "screenshot.png";
 
-			this._endHighResolution();
-			a.click();
-		}),
+				this._endHighResolution();
+				a.click();
+			},
 			"image/png",
-			1;
+			1,
+		);
 	}
 }

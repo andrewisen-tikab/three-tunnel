@@ -74,6 +74,12 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
     public groutGroup: THREE.Group;
 
+    /** Root group that holds the tunnel mesh & edge lines */
+    private _tunnelGroup: THREE.Group | null = null;
+
+    /** Currently applied clipping planes */
+    private _clippingPlanes: THREE.Plane[] = [];
+
     private _shape: THREE.Shape;
 
     /**
@@ -147,20 +153,22 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
         const tunnelMaterial = new THREE.MeshBasicMaterial({
             // grey
             color: tunnelColorHEX,
+            clippingPlanes: this._clippingPlanes,
+            clipShadows: false,
+            side: THREE.DoubleSide, // show both interior/exterior faces when clipped
         });
         const tunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
 
-        group.add(tunnel);
+    group.add(tunnel);
 
         const edges = new THREE.EdgesGeometry(tunnelGeometry);
-        const line = new THREE.LineSegments(
-            edges,
-            new THREE.LineBasicMaterial({ color: 0x000000 }),
-        );
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+        const line = new THREE.LineSegments(edges, lineMaterial);
         group.add(line);
 
-        group.translateY(tunnelHeight / 2);
-        this.add(group);
+    group.translateY(tunnelHeight / 2);
+    this.add(group);
+    this._tunnelGroup = group;
 
         this.add(this.groutGroup);
 
@@ -178,6 +186,21 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
     update(): void {
         this.clear();
         this._build();
+        // Re-apply clipping planes to new meshes after rebuild
+        if (this._tunnelGroup) {
+            const isMesh = (o: THREE.Object3D): o is THREE.Mesh => (o as THREE.Mesh).isMesh === true;
+            this._tunnelGroup.traverse((obj) => {
+                if (!isMesh(obj)) return;
+                const material = obj.material;
+                const apply = (mat: THREE.Material) => {
+                    if ('clippingPlanes' in mat) {
+                        (mat as THREE.MeshBasicMaterial).clippingPlanes = this._clippingPlanes;
+                    }
+                };
+                if (Array.isArray(material)) material.forEach(apply);
+                else if (material) apply(material);
+            });
+        }
     }
 
     toJSON() {
@@ -194,6 +217,27 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 
     fromJSON(params: AbstractTunnel3D): void {
         Object.assign(this, params);
+    }
+
+    /**
+     * Set clipping planes for just the tunnel geometry (not grouts).
+     * Passing an empty array removes clipping.
+     */
+    public setClippingPlanes(planes: THREE.Plane[]) {
+        this._clippingPlanes = planes;
+        if (this._tunnelGroup == null) return;
+        const isMesh = (o: THREE.Object3D): o is THREE.Mesh => (o as THREE.Mesh).isMesh === true;
+        this._tunnelGroup.traverse((obj) => {
+            if (!isMesh(obj)) return;
+            const material = obj.material;
+            const apply = (mat: THREE.Material) => {
+                if ('clippingPlanes' in mat) {
+                    (mat as THREE.MeshBasicMaterial).clippingPlanes = planes;
+                }
+            };
+            if (Array.isArray(material)) material.forEach(apply);
+            else if (material) apply(material);
+        });
     }
 
     public buildStick(position: number, stick: number) {
