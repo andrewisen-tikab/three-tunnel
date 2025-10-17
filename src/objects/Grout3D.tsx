@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { AbstractGrout3D, AbstractGrout3DParams, AbstractObject3D } from '../core';
+import type { AbstractGrout3D, AbstractGrout3DParams } from '../core';
 import Tunnel3D from './Tunnel3D';
 
 /**
  * A cylindrical grout shape with a circular cross-section.
  */
-export default class Grout3D extends THREE.Object3D implements AbstractGrout3D, AbstractObject3D {
+export default class Grout3D extends THREE.Object3D implements AbstractGrout3D {
     public isGrout3D: boolean = true;
 
     public isVisible: boolean;
@@ -63,7 +63,8 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D, 
         this._build();
     }
 
-    public toJSON(): AbstractGrout3DParams {
+    /** Return only the grout parameters (avoid overriding Object3D.toJSON). */
+    public toParams(): AbstractGrout3DParams {
         const { isVisible, angle, cutDepth, groutColorHEX, holeLength, overlap } = this;
         const object: AbstractGrout3DParams = {
             isVisible,
@@ -76,8 +77,9 @@ export default class Grout3D extends THREE.Object3D implements AbstractGrout3D, 
         return object;
     }
 
-    public fromJSON(json: AbstractGrout3DParams): void {
+    public fromParams(json: AbstractGrout3DParams): void {
         Object.assign(this, json);
         this.update();
     }
+
 }

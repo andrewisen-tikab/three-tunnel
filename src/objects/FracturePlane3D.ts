@@ -1,16 +1,10 @@
 import * as THREE from "three";
-import {
-	AbstractFracturePlane3D,
-	AbstractFracturePlane3DParams,
-	AbstractObject3D,
-} from "../core";
+import type { AbstractFracturePlane3D, AbstractFracturePlane3DParams } from "../core";
 
 const x = /* #__PURE__ */ new THREE.Vector3(1, 0, 0);
 const y = /* #__PURE__ */ new THREE.Vector3(0, 1, 0);
 
-export default class FracturePlane3D
-	extends THREE.Object3D
-	implements AbstractFracturePlane3D, AbstractObject3D
+export default class FracturePlane3D extends THREE.Object3D implements AbstractFracturePlane3D
 {
 	public isFracturePlane3D: boolean = true;
 
@@ -86,7 +80,8 @@ export default class FracturePlane3D
 		return this._mesh;
 	}
 
-	public toJSON(): AbstractFracturePlane3DParams {
+	/** Lightweight fracture plane parameter export (not overriding Object3D.toJSON). */
+	public toParams(): AbstractFracturePlane3DParams {
 		const {
 			visible,
 			xPosition,
@@ -110,8 +105,9 @@ export default class FracturePlane3D
 		return object;
 	}
 
-	public fromJSON(json: AbstractFracturePlane3DParams): void {
+	public fromParams(json: AbstractFracturePlane3DParams): void {
 		Object.assign(this, json);
 		this.update();
 	}
+
 }

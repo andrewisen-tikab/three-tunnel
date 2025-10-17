@@ -1,14 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export type AbstractObject3D = {
-    /**
-     * Convert the object to JSON format.
-     */
-    toJSON(): any;
-    /**
-     * Convert the object from JSON format.
-     */
-    fromJSON(...args: any[]): void;
-};
+// Deprecated legacy serialization helper removed.
+export type AbstractObject3D = unknown;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**

@@ -707,8 +707,8 @@ export default class Viewer {
 				tunnelLength,
 			},
 			grouts,
-			planes: this._planes.map((plane) => plane.toJSON()),
-			controls: this.tunnelControls.toJSON(),
+			planes: this._planes.map((plane) => plane.toParams()),
+			controls: this.tunnelControls.toParams(),
 			background: {
 				gridHelperXZVisible,
 				gridHelperXYVisible,
@@ -779,13 +779,13 @@ export default class Viewer {
 			const element = planes[i];
 			const plane = this._planes[i];
 			if (plane == null) continue;
-			plane.fromJSON(element);
+			plane.fromParams(element);
 		}
 	}
 
 	private _fromJSONControls(json: JSONParams): void {
 		const { controls } = json;
-		this.tunnelControls.fromJSON(controls);
+		this.tunnelControls.fromParams(controls);
 	}
 
 	private _fromJSONBackground(json: JSONParams): void {
@@ -849,9 +849,6 @@ export default class Viewer {
 		input.click();
 	}
 
-	private _update(): void {
-		this.tunnelControls.update();
-	}
 
 	private _render(): void {
 		// if (this.freeze) return;

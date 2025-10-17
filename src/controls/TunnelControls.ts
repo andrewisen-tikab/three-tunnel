@@ -9,15 +9,7 @@ import {
 } from '../core';
 import { EventDispatcher } from './EventDispatcher';
 
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({
-    // blue
-    color: 0x0000ff,
-});
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-const cube = new THREE.Mesh(geometry, material);
+// Debug helpers removed
 
 export default class TunnelControls extends EventDispatcher {
     public groupGrouts: boolean = true;
@@ -195,9 +187,9 @@ export default class TunnelControls extends EventDispatcher {
             const previousGrout = spreads[groutIndex];
 
             // Setup the new one
-            const json = previousGrout.toJSON();
+            const json = previousGrout.toParams();
             const spread = new Grout3D(this._tunnel!);
-            spread.fromJSON(json);
+            spread.fromParams(json);
             spread.position.copy(previousGrout.position);
 
             // Set the new grout's position to the end (!) of the hole
@@ -235,14 +227,16 @@ export default class TunnelControls extends EventDispatcher {
         this._spread.add(...spreads);
     }
 
-    toJSON(): AbstractTunnelControlsParams {
+    /** Export control parameters (currently empty placeholder). */
+    toParams(): AbstractTunnelControlsParams {
         const object: AbstractTunnelControlsParams = {};
         return object;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    fromJSON(_json: AbstractTunnelControlsParams): void {
+    fromParams(_json: AbstractTunnelControlsParams): void {
         // Object.assign(this, json);
         this.update();
     }
+
 }

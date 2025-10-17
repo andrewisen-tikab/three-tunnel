@@ -1,13 +1,9 @@
 import * as THREE from "three";
 
-import {
-	AbstractObject3D,
-	AbstractTunnel3D,
-	AbstractTunnel3DParams,
-} from "../core";
+import type { AbstractTunnel3D, AbstractTunnel3DParams } from "../core";
 
 import Shape from "@doodle3d/clipper-js";
-import { Grout3D } from "..";
+import type { Grout3D } from "..";
 import { disposeMeshGroup } from "../utils/disposeMesh";
 
 const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -53,13 +49,9 @@ function evenlyInterpolateShape(
 
 		for (let j = 0; j <= numSubdivisions; j++) {
 			const t = j / numSubdivisions;
-			const interpolatedPoint = new THREE.Vector3().lerpVectors(
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-				// @ts-ignore
-				shapePoints[i - 1],
-				shapePoints[i],
-				t,
-			);
+			const a = new THREE.Vector3(shapePoints[i - 1].x, shapePoints[i - 1].y, 0);
+			const b = new THREE.Vector3(shapePoints[i].x, shapePoints[i].y, 0);
+			const interpolatedPoint = new THREE.Vector3().lerpVectors(a, b, t);
 			newPoints.push(interpolatedPoint);
 		}
 	}
@@ -71,9 +63,7 @@ function evenlyInterpolateShape(
  * An extruded tunnel shape with straight walls and an elliptical roof.
  * The tunnel is centered at the origin and extends along the positive z-axis.
  */
-export default class Tunnel3D
-	extends THREE.Object3D
-	implements AbstractTunnel3D, AbstractObject3D
+export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 {
 	public isTunnel3D: boolean = true;
 
@@ -258,7 +248,12 @@ export default class Tunnel3D
 		return this._tunnelMesh;
 	}
 
-	toJSON() {
+	/**
+	 * Return only the parameter subset for lightweight persistence.
+	 * NOTE: Intentionally not overriding THREE.Object3D.toJSON to remain
+	 * compatible with newer three.js structural typing.
+	 */
+	public toParams() {
 		const {
 			tunnelLength,
 			tunnelWidth,
@@ -276,9 +271,10 @@ export default class Tunnel3D
 		return object;
 	}
 
-	fromJSON(params: AbstractTunnel3D): void {
+	public fromParams(params: AbstractTunnel3D): void {
 		Object.assign(this, params);
 	}
+
 
 	/**
 	 * Set clipping planes for just the tunnel geometry (not grouts).
