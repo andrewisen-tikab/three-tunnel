@@ -49,7 +49,11 @@ function evenlyInterpolateShape(
 
 		for (let j = 0; j <= numSubdivisions; j++) {
 			const t = j / numSubdivisions;
-			const a = new THREE.Vector3(shapePoints[i - 1].x, shapePoints[i - 1].y, 0);
+			const a = new THREE.Vector3(
+				shapePoints[i - 1].x,
+				shapePoints[i - 1].y,
+				0,
+			);
 			const b = new THREE.Vector3(shapePoints[i].x, shapePoints[i].y, 0);
 			const interpolatedPoint = new THREE.Vector3().lerpVectors(a, b, t);
 			newPoints.push(interpolatedPoint);
@@ -63,7 +67,9 @@ function evenlyInterpolateShape(
  * An extruded tunnel shape with straight walls and an elliptical roof.
  * The tunnel is centered at the origin and extends along the positive z-axis.
  */
-export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
+export default class Tunnel3D
+	extends THREE.Object3D
+	implements AbstractTunnel3D
 {
 	public isTunnel3D: boolean = true;
 
@@ -274,7 +280,6 @@ export default class Tunnel3D extends THREE.Object3D implements AbstractTunnel3D
 	public fromParams(params: AbstractTunnel3D): void {
 		Object.assign(this, params);
 	}
-
 
 	/**
 	 * Set clipping planes for just the tunnel geometry (not grouts).

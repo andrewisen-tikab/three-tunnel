@@ -1,10 +1,15 @@
 import * as THREE from "three";
-import type { AbstractFracturePlane3D, AbstractFracturePlane3DParams } from "../core";
+import type {
+	AbstractFracturePlane3D,
+	AbstractFracturePlane3DParams,
+} from "../core";
 
 const x = /* #__PURE__ */ new THREE.Vector3(1, 0, 0);
 const y = /* #__PURE__ */ new THREE.Vector3(0, 1, 0);
 
-export default class FracturePlane3D extends THREE.Object3D implements AbstractFracturePlane3D
+export default class FracturePlane3D
+	extends THREE.Object3D
+	implements AbstractFracturePlane3D
 {
 	public isFracturePlane3D: boolean = true;
 
@@ -109,5 +114,4 @@ export default class FracturePlane3D extends THREE.Object3D implements AbstractF
 		Object.assign(this, json);
 		this.update();
 	}
-
 }

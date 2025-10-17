@@ -849,7 +849,6 @@ export default class Viewer {
 		input.click();
 	}
 
-
 	private _render(): void {
 		// if (this.freeze) return;
 		this._renderer.render(this._scene, this._camera);
