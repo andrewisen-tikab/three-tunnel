@@ -44,7 +44,7 @@ jobs:
           corepack enable
           yarn set version stable
           yarn install
-          yarn version
+          yarn run version
           yarn build
           yarn build:example
           yarn docs
